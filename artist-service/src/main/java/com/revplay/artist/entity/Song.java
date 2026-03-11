@@ -25,7 +25,8 @@ public class Song {
     @Column(nullable = false)
     private String genre;
 
-    @Column(nullable = false)
+    @Lob
+    @Column(nullable = false, columnDefinition = "CLOB")
     private String fileUrl;
 
     private String coverImageUrl;

@@ -85,7 +85,7 @@ export class ManageAlbumsComponent implements OnInit {
   }
 
   removeFromAlbum(songId: number): void {
-    this.songService.updateSong(songId, { albumId: undefined }).subscribe({
+    this.songService.updateSong(songId, { albumId: 0 }).subscribe({
       next: () => {
         this.loadAlbums();
         this.loadSongs();

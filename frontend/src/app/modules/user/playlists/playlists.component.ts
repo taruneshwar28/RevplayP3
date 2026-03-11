@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { PlaylistResponse, PlaylistService } from 'src/app/core/services/playlist.service';
 import { SongCatalogResponse, SongLibraryService } from 'src/app/core/services/song-library.service';
+import { forkJoin } from 'rxjs';
 
 @Component({
   selector: 'app-playlists',
@@ -11,9 +12,12 @@ export class PlaylistsComponent implements OnInit {
   availableSongs: SongCatalogResponse[] = [];
   playlists: PlaylistResponse[] = [];
 
-  newPlaylist = { name: '', description: '', isPublic: false };
-  editDrafts: Record<number, { name: string; description: string; isPublic: boolean }> = {};
+  newPlaylist = { name: '', description: '' };
+  editDrafts: Record<number, { name: string; description: string }> = {};
   songInput: Record<number, number | null> = {};
+  loading = false;
+  saving = false;
+  errorMessage = '';
 
   constructor(
     private readonly playlistService: PlaylistService,
@@ -25,6 +29,7 @@ export class PlaylistsComponent implements OnInit {
   }
 
   loadSongs(): void {
+    this.loading = true;
     this.songLibraryService.getPublicSongs(0, 200).subscribe({
       next: (songsPage) => {
         this.availableSongs = songsPage.content;
@@ -38,24 +43,44 @@ export class PlaylistsComponent implements OnInit {
   }
 
   load(): void {
+    this.errorMessage = '';
     this.playlistService.getAll().subscribe({
       next: (res) => {
-        this.playlists = res;
+        if (res.length === 0) {
+          this.playlists = [];
+          this.loading = false;
+          return;
+        }
 
-        this.playlists.forEach((playlist) => {
-          this.editDrafts[playlist.id] = {
-            name: playlist.name,
-            description: playlist.description ?? '',
-            isPublic: !!playlist.isPublic,
-          };
-
-          if (this.songInput[playlist.id] === undefined) {
-            this.songInput[playlist.id] = this.availableSongs.length > 0 ? this.availableSongs[0].id : null;
-          }
+        forkJoin(
+          res.map((playlist) =>
+            this.playlistService.getById(playlist.id)
+          )
+        ).subscribe({
+          next: (details) => {
+            this.playlists = details;
+            this.playlists.forEach((playlist) => {
+              this.editDrafts[playlist.id] = {
+                name: playlist.name,
+                description: playlist.description ?? '',
+              };
+              if (this.songInput[playlist.id] === undefined) {
+                this.songInput[playlist.id] = this.availableSongs.length > 0 ? this.availableSongs[0].id : null;
+              }
+            });
+            this.loading = false;
+          },
+          error: () => {
+            this.playlists = res.map((playlist) => ({ ...playlist, songs: playlist.songs ?? [] }));
+            this.loading = false;
+            this.errorMessage = 'Unable to load playlist songs.';
+          },
         });
       },
       error: () => {
         this.playlists = [];
+        this.loading = false;
+        this.errorMessage = 'Unable to load playlists.';
       },
     });
   }
@@ -70,33 +95,53 @@ export class PlaylistsComponent implements OnInit {
       return;
     }
 
+    this.saving = true;
+    this.errorMessage = '';
     this.playlistService
       .create({
         name,
         description: this.newPlaylist.description.trim(),
-        isPublic: this.newPlaylist.isPublic,
       })
       .subscribe({
         next: () => {
-          this.newPlaylist = { name: '', description: '', isPublic: false };
+          this.newPlaylist = { name: '', description: '' };
+          this.saving = false;
           this.load();
+        },
+        error: () => {
+          this.saving = false;
+          this.errorMessage = 'Unable to create playlist.';
         },
       });
   }
 
   update(playlistId: number): void {
     const draft = this.editDrafts[playlistId];
-    this.playlistService
-      .update(playlistId, {
-        name: draft.name.trim(),
-        description: draft.description.trim(),
-        isPublic: draft.isPublic,
-      })
-      .subscribe({ next: () => this.load() });
+    if (!draft || !draft.name.trim()) {
+      this.errorMessage = 'Playlist name is required.';
+      return;
+    }
+
+    this.errorMessage = '';
+    this.playlistService.update(playlistId, {
+      name: draft.name.trim(),
+      description: draft.description.trim(),
+    }).subscribe({
+      next: () => this.load(),
+      error: () => {
+        this.errorMessage = 'Unable to update playlist.';
+      },
+    });
   }
 
   delete(playlistId: number): void {
-    this.playlistService.delete(playlistId).subscribe({ next: () => this.load() });
+    this.errorMessage = '';
+    this.playlistService.delete(playlistId).subscribe({
+      next: () => this.load(),
+      error: () => {
+        this.errorMessage = 'Unable to delete playlist.';
+      },
+    });
   }
 
   addSong(playlistId: number): void {
@@ -105,14 +150,22 @@ export class PlaylistsComponent implements OnInit {
       return;
     }
 
+    this.errorMessage = '';
     this.playlistService.addSong(playlistId, { songId }).subscribe({
       next: () => this.load(),
+      error: () => {
+        this.errorMessage = 'Unable to add song to playlist.';
+      },
     });
   }
 
   removeSong(playlistId: number, songId: number): void {
+    this.errorMessage = '';
     this.playlistService.removeSong(playlistId, songId).subscribe({
       next: () => this.load(),
+      error: () => {
+        this.errorMessage = 'Unable to remove song from playlist.';
+      },
     });
   }
 }

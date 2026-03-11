@@ -9,11 +9,11 @@ public class UserProfileRequest {
     @Size(min = 3, max = 50, message = "Username must be between 3 and 50 characters")
     private String username;
 
+    @Size(max = 100, message = "Display name must not exceed 100 characters")
+    private String displayName;
+
     @Size(max = 500, message = "Bio must not exceed 500 characters")
     private String bio;
-
-    @Size(max = 500, message = "Profile image URL must not exceed 500 characters")
-    private String profileImageUrl;
 
     public UserProfileRequest() {
     }
@@ -27,8 +27,8 @@ public class UserProfileRequest {
         return bio;
     }
 
-    public String getProfileImageUrl() {
-        return profileImageUrl;
+    public String getDisplayName() {
+        return displayName;
     }
 
     // Setters
@@ -40,8 +40,8 @@ public class UserProfileRequest {
         this.bio = bio;
     }
 
-    public void setProfileImageUrl(String profileImageUrl) {
-        this.profileImageUrl = profileImageUrl;
+    public void setDisplayName(String displayName) {
+        this.displayName = displayName;
     }
 
     // Builder
@@ -61,13 +61,13 @@ public class UserProfileRequest {
             return this;
         }
 
-        public Builder bio(String bio) {
-            request.bio = bio;
+        public Builder displayName(String displayName) {
+            request.displayName = displayName;
             return this;
         }
 
-        public Builder profileImageUrl(String profileImageUrl) {
-            request.profileImageUrl = profileImageUrl;
+        public Builder bio(String bio) {
+            request.bio = bio;
             return this;
         }
 

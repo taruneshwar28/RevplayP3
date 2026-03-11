@@ -1,54 +1,45 @@
-<h2>Browse Songs</h2>
+<section class="browse-page">
+  <h2 class="browse-title">Browse Songs</h2>
 
-<div class="card">
-  <h3>Advanced Search</h3>
-  <label>Query</label>
-  <input [(ngModel)]="advancedSearch.query" />
-  <label>Artist</label>
-  <input [(ngModel)]="advancedSearch.artistName" />
-  <label>Genre</label>
-  <input [(ngModel)]="advancedSearch.genre" />
-  <button type="button" (click)="runAdvancedSearch()">Search</button>
-</div>
+  <p *ngIf="loading" class="browse-state">Loading songs...</p>
+  <p *ngIf="!loading && !hasSongs" class="browse-state">
+    No songs yet.
+  </p>
 
-<div class="card">
-  <h3>Genres</h3>
-  <button *ngFor="let genre of genres" type="button" (click)="advancedSearch.genre = genre.name; runAdvancedSearch()">
-    {{ genre.name }} ({{ genre.songCount }})
-  </button>
-</div>
+  <div *ngFor="let song of !loading ? visibleSongs : []" class="browse-row">
+    <div class="song-main">
+      <p class="song-title">{{ song.title }}</p>
+    </div>
 
-<div class="card">
-  <h3>Trending</h3>
-  <button type="button" (click)="loadTrending('daily')">Daily</button>
-  <button type="button" (click)="loadTrending('weekly')">Weekly</button>
-  <button type="button" (click)="loadTrending('monthly')">Monthly</button>
-  <ul>
-    <li *ngFor="let song of trendingSongs">{{ song.title }} - {{ song.artistName }}</li>
-  </ul>
-</div>
-
-<div *ngIf="loading" class="card">Loading songs...</div>
-<div *ngIf="errorMessage" class="card">{{ errorMessage }}</div>
-
-<div *ngIf="!loading && songs.length === 0" class="card">
-  <p>No songs available.</p>
-</div>
-
-<div *ngFor="let song of songs" class="card browse-row">
-  <div class="song-main">
-    <p class="song-title">{{ song.title }}</p>
-    <p>{{ song.artistName }} | {{ song.genre || '-' }} | Plays: {{ song.playCount || 0 }}</p>
+    <div class="song-actions">
+      <button type="button" class="play-toggle" (click)="playSong(song.id)">Play</button>
+      <button type="button" class="icon-toggle" (click)="viewSongDetails(song.id)" aria-label="View song details">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path
+            d="M1.5 12s3.8-6.5 10.5-6.5S22.5 12 22.5 12s-3.8 6.5-10.5 6.5S1.5 12 1.5 12Z"
+          />
+          <circle cx="12" cy="12" r="3.5" />
+        </svg>
+      </button>
+      <button
+        type="button"
+        class="icon-toggle favorite-toggle"
+        [class.favorite-on]="song.isFavorite"
+        (click)="toggleFavorite(song.id, song.isFavorite)"
+        [disabled]="favoriteBusySongIds.has(song.id)"
+        [attr.aria-label]="song.isFavorite ? 'Remove from favorites' : 'Add to favorites'">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path
+            d="M12 20.8 4.9 13.9a4.8 4.8 0 0 1 0-6.9 5 5 0 0 1 7 0L12 8l.1-.1a5 5 0 0 1 7 0 4.8 4.8 0 0 1 0 6.9Z"
+          />
+        </svg>
+      </button>
+    </div>
   </div>
-  <div class="song-actions">
-    <button type="button" class="play-toggle" (click)="playSong(song.id)">Play</button>
-    <button type="button" class="view-toggle" (click)="viewSongDetails(song.id)">Details</button>
-    <button
-      type="button"
-      class="favorite-toggle"
-      [class.favorite-on]="song.isFavorite"
-      (click)="toggleFavorite(song.id, song.isFavorite)">
-      {{ song.isFavorite ? 'Unfavorite' : 'Favorite' }}
-    </button>
+
+  <div class="pagination" *ngIf="!loading && totalPages > 0">
+    <button type="button" (click)="previousPage()" [disabled]="currentPage === 0">Prev</button>
+    <span>Page {{ currentPage + 1 }} / {{ totalPages }}</span>
+    <button type="button" (click)="nextPage()" [disabled]="currentPage >= totalPages - 1">Next</button>
   </div>
-</div>
+</section>

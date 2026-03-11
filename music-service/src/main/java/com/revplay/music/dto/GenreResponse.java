@@ -35,7 +35,6 @@ public class GenreResponse {
         }
     }
 
-    // Getters and Setters
     public String getName() {
         return name;
     }

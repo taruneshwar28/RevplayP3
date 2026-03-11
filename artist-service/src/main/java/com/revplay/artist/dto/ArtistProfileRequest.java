@@ -12,6 +12,17 @@ public class ArtistProfileRequest {
     @Size(max = 1000, message = "Bio must not exceed 1000 characters")
     private String bio;
 
+    @Size(max = 100, message = "Genre must not exceed 100 characters")
+    private String genre;
+
+    private String instagramUrl;
+
+    private String twitterUrl;
+
+    private String youtubeUrl;
+
+    private String websiteUrl;
+
     private String profileImageUrl;
 
     // Constructors
@@ -43,6 +54,46 @@ public class ArtistProfileRequest {
         this.profileImageUrl = profileImageUrl;
     }
 
+    public String getGenre() {
+        return genre;
+    }
+
+    public void setGenre(String genre) {
+        this.genre = genre;
+    }
+
+    public String getInstagramUrl() {
+        return instagramUrl;
+    }
+
+    public void setInstagramUrl(String instagramUrl) {
+        this.instagramUrl = instagramUrl;
+    }
+
+    public String getTwitterUrl() {
+        return twitterUrl;
+    }
+
+    public void setTwitterUrl(String twitterUrl) {
+        this.twitterUrl = twitterUrl;
+    }
+
+    public String getYoutubeUrl() {
+        return youtubeUrl;
+    }
+
+    public void setYoutubeUrl(String youtubeUrl) {
+        this.youtubeUrl = youtubeUrl;
+    }
+
+    public String getWebsiteUrl() {
+        return websiteUrl;
+    }
+
+    public void setWebsiteUrl(String websiteUrl) {
+        this.websiteUrl = websiteUrl;
+    }
+
     // Builder pattern
     public static Builder builder() {
         return new Builder();
@@ -58,6 +109,31 @@ public class ArtistProfileRequest {
 
         public Builder bio(String bio) {
             request.bio = bio;
+            return this;
+        }
+
+        public Builder genre(String genre) {
+            request.genre = genre;
+            return this;
+        }
+
+        public Builder instagramUrl(String instagramUrl) {
+            request.instagramUrl = instagramUrl;
+            return this;
+        }
+
+        public Builder twitterUrl(String twitterUrl) {
+            request.twitterUrl = twitterUrl;
+            return this;
+        }
+
+        public Builder youtubeUrl(String youtubeUrl) {
+            request.youtubeUrl = youtubeUrl;
+            return this;
+        }
+
+        public Builder websiteUrl(String websiteUrl) {
+            request.websiteUrl = websiteUrl;
             return this;
         }
 

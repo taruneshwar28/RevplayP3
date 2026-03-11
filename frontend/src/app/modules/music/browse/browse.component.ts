@@ -1,12 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { FavoriteService } from 'src/app/core/services/favorite.service';
+import { FavoriteResponse, FavoriteService } from 'src/app/core/services/favorite.service';
 import {
-  GenreResponse,
-  SearchRequest,
   SongCatalogResponse,
   SongLibraryService,
-  TrendingResponse,
 } from 'src/app/core/services/song-library.service';
 
 @Component({
@@ -16,20 +13,17 @@ import {
 })
 export class BrowseComponent implements OnInit {
   songs: Array<SongCatalogResponse & { isFavorite: boolean }> = [];
-  genres: GenreResponse[] = [];
-  trendingSongs: SongCatalogResponse[] = [];
-
+  filteredSongs: Array<SongCatalogResponse & { isFavorite: boolean }> = [];
   currentPage = 0;
-  pageSize = 20;
-
-  advancedSearch: SearchRequest = {
-    query: '',
-    genre: '',
-    artistName: '',
-  };
-
-  releaseDateFilter = '';
-  sortBy = '';
+  readonly pageSize = 5;
+  totalPages = 1;
+  searchQuery = '';
+  artistFilter = '';
+  albumFilter = '';
+  genreFilter = '';
+  dateFilter = '';
+  sortOption = 'none';
+  favoriteBusySongIds = new Set<number>();
 
   loading = false;
   errorMessage = '';
@@ -42,99 +36,65 @@ export class BrowseComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.loadGenres();
-    this.loadTrending('weekly');
-
     this.route.queryParamMap.subscribe((params) => {
-      this.advancedSearch.query = params.get('q') ?? '';
-      this.advancedSearch.artistName = params.get('artist') ?? '';
-      this.advancedSearch.genre = params.get('genre') ?? '';
-      this.releaseDateFilter = params.get('releaseDate') ?? '';
-      this.sortBy = params.get('sort') ?? '';
-
-      this.loadSongsForCurrentQuery();
+      this.searchQuery = (params.get('q') ?? '').trim();
+      this.artistFilter = (params.get('artist') ?? '').trim();
+      this.albumFilter = (params.get('album') ?? '').trim();
+      this.genreFilter = (params.get('genre') ?? '').trim();
+      this.dateFilter = (params.get('date') ?? '').trim();
+      this.sortOption = (params.get('sort') ?? 'none').trim() || 'none';
+      const pageParam = Number(params.get('page') ?? '1');
+      this.currentPage = Number.isFinite(pageParam) && pageParam > 0 ? pageParam - 1 : 0;
+      this.loadSongs();
     });
   }
 
-  loadSongsForCurrentQuery(): void {
+  loadSongs(): void {
     this.loading = true;
     this.errorMessage = '';
-
-    const hasSearch =
-      this.advancedSearch.query.trim().length > 0 ||
-      (this.advancedSearch.artistName || '').trim().length > 0 ||
-      (this.advancedSearch.genre || '').trim().length > 0;
-
-    if (hasSearch) {
-      this.songLibraryService
-        .advancedSearch(
-          {
-            query: this.advancedSearch.query || '',
-            genre: this.advancedSearch.genre || undefined,
-            artistName: this.advancedSearch.artistName || undefined,
-          },
-          this.currentPage,
-          this.pageSize
-        )
-        .subscribe({
-          next: (res) => this.updateSongs(res.songs),
-          error: () => this.handleLoadError(),
-        });
+    if (this.searchQuery) {
+      this.songLibraryService.searchSongs(this.searchQuery, 0, 500).subscribe({
+        next: (res) => {
+          this.updateSongs(res.songs);
+        },
+        error: () => this.handleLoadError(),
+      });
       return;
     }
 
-    this.songLibraryService.getPublicSongs(this.currentPage, this.pageSize).subscribe({
-      next: (res) => this.updateSongs(res.content),
+    this.songLibraryService.getPublicSongs(0, 500).subscribe({
+      next: (res) => {
+        this.updateSongs(res.content);
+      },
       error: () => this.handleLoadError(),
     });
   }
 
-  loadGenres(): void {
-    this.songLibraryService.getGenres().subscribe({
-      next: (rows) => {
-        this.genres = rows;
-      },
-      error: () => {
-        this.genres = [];
-      },
-    });
-  }
-
-  loadTrending(period: 'daily' | 'weekly' | 'monthly'): void {
-    this.songLibraryService.getTrendingByPeriod(period, 10).subscribe({
-      next: (res: TrendingResponse) => {
-        this.trendingSongs = res.songs;
-      },
-      error: () => {
-        this.trendingSongs = [];
-      },
-    });
-  }
-
-  runAdvancedSearch(): void {
-    this.router.navigate(['/browse'], {
-      queryParams: {
-        q: this.advancedSearch.query || undefined,
-        artist: this.advancedSearch.artistName || undefined,
-        genre: this.advancedSearch.genre || undefined,
-      },
-    });
-  }
-
   toggleFavorite(songId: number, isFavorite: boolean): void {
+    if (this.loading || this.favoriteBusySongIds.has(songId)) {
+      return;
+    }
+
+    this.favoriteBusySongIds.add(songId);
+    const currentSong = this.songs.find((song) => song.id === songId);
     const update = this.songs.map((song) =>
       song.id === songId ? { ...song, isFavorite: !isFavorite } : song
     );
     this.songs = update;
 
-    const request$ = isFavorite ? this.favoriteService.remove(songId) : this.favoriteService.add(songId);
+    const request$ = isFavorite
+      ? this.favoriteService.remove(songId)
+      : this.favoriteService.add(songId, currentSong?.title, currentSong?.artistName);
 
     request$.subscribe({
-      next: () => {},
+      next: () => {
+        this.favoriteBusySongIds.delete(songId);
+      },
       error: () => {
         this.songs = this.songs.map((song) =>
           song.id === songId ? { ...song, isFavorite } : song
         );
+        this.favoriteBusySongIds.delete(songId);
       },
     });
   }
@@ -151,65 +111,140 @@ export class BrowseComponent implements OnInit {
     });
   }
 
+  previousPage(): void {
+    if (this.currentPage <= 0) {
+      return;
+    }
+
+    this.navigateToPage(this.currentPage);
+  }
+
+  nextPage(): void {
+    if (this.currentPage >= this.totalPages - 1) {
+      return;
+    }
+
+    this.navigateToPage(this.currentPage + 2);
+  }
+
+  get hasSongs(): boolean {
+    return this.filteredSongs.length > 0;
+  }
+
   private loadFavorites(): void {
     this.favoriteService.get().subscribe({
       next: (favorites) => {
-        const ids = new Set(favorites.map((row) => row.songId));
-        this.songs = this.songs.map((song) => ({
-          ...song,
-          isFavorite: ids.has(song.id),
-        }));
+        this.applyFavoriteState(favorites);
+        this.loading = false;
       },
-      error: () => {},
-    });
-  }
-
-  private sortSongs(rows: SongCatalogResponse[]): SongCatalogResponse[] {
-    if (!this.sortBy) {
-      return rows;
-    }
-
-    return [...rows].sort((a, b) => {
-      const artistA = (a.artistName ?? '').toLowerCase();
-      const artistB = (b.artistName ?? '').toLowerCase();
-      const albumA = (a.albumTitle ?? '').toLowerCase();
-      const albumB = (b.albumTitle ?? '').toLowerCase();
-      const genreA = (a.genre ?? '').toLowerCase();
-      const genreB = (b.genre ?? '').toLowerCase();
-      const releaseA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-      const releaseB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-
-      switch (this.sortBy) {
-        case 'releaseDateAsc':
-          return releaseA - releaseB;
-        case 'releaseDateDesc':
-          return releaseB - releaseA;
-        case 'artistAsc':
-          return artistA.localeCompare(artistB);
-        case 'albumAsc':
-          return albumA.localeCompare(albumB);
-        case 'genreAsc':
-          return genreA.localeCompare(genreB);
-        default:
-          return 0;
-      }
+      error: () => {
+        this.applyFavoriteState([]);
+        this.loading = false;
+      },
     });
   }
 
   private updateSongs(rawSongs: SongCatalogResponse[]): void {
-    const filteredByDate = this.releaseDateFilter
-      ? rawSongs.filter((song) => (song.createdAt ?? '').slice(0, 10) === this.releaseDateFilter)
-      : rawSongs;
-
-    const sorted = this.sortSongs(filteredByDate);
-    this.songs = sorted.map((song) => ({ ...song, isFavorite: false }));
+    this.songs = rawSongs.map((song) => ({ ...song, isFavorite: false }));
     this.loadFavorites();
-    this.loading = false;
   }
 
   private handleLoadError(): void {
     this.songs = [];
+    this.totalPages = 1;
     this.loading = false;
-    this.errorMessage = 'Unable to load songs';
+  }
+
+  private navigateToPage(page: number): void {
+    this.router.navigate(['/browse'], {
+      queryParams: {
+        q: this.searchQuery || undefined,
+        artist: this.artistFilter || undefined,
+        album: this.albumFilter || undefined,
+        genre: this.genreFilter || undefined,
+        date: this.dateFilter || undefined,
+        sort: this.sortOption !== 'none' ? this.sortOption : undefined,
+        page,
+      },
+    });
+  }
+
+  private applyFavoriteState(favorites: FavoriteResponse[]): void {
+    const ids = new Set(favorites.map((row) => row.songId));
+    this.songs = this.songs.map((song) => ({
+      ...song,
+      isFavorite: ids.has(song.id),
+    }));
+    this.applyFiltersAndPagination();
+    this.loading = false;
+  }
+
+  private applyFiltersAndPagination(): void {
+    let result = [...this.songs];
+    const hasFilters =
+      !!this.searchQuery ||
+      !!this.artistFilter ||
+      !!this.albumFilter ||
+      !!this.genreFilter ||
+      !!this.dateFilter ||
+      this.sortOption !== 'none';
+
+    if (this.artistFilter) {
+      const needle = this.artistFilter.toLowerCase();
+      result = result.filter((song) => (song.artistName ?? '').toLowerCase().includes(needle));
+    }
+
+    if (this.albumFilter) {
+      const needle = this.albumFilter.toLowerCase();
+      result = result.filter((song) => (song.albumTitle ?? '').toLowerCase().includes(needle));
+    }
+
+    if (this.genreFilter) {
+      const needle = this.genreFilter.toLowerCase();
+      result = result.filter((song) => (song.genre ?? '').toLowerCase().includes(needle));
+    }
+
+    if (this.dateFilter) {
+      result = result.filter((song) => (song.createdAt ?? '').slice(0, 10) === this.dateFilter);
+    }
+
+    switch (this.sortOption) {
+      case 'titleAsc':
+        result.sort((a, b) => a.title.localeCompare(b.title));
+        break;
+      case 'titleDesc':
+        result.sort((a, b) => b.title.localeCompare(a.title));
+        break;
+      case 'artistAsc':
+        result.sort((a, b) => (a.artistName ?? '').localeCompare(b.artistName ?? ''));
+        break;
+      case 'playsDesc':
+        result.sort((a, b) => (b.playCount ?? 0) - (a.playCount ?? 0));
+        break;
+      case 'newest':
+        result.sort((a, b) => (b.createdAt ?? '').localeCompare(a.createdAt ?? ''));
+        break;
+      case 'oldest':
+        result.sort((a, b) => (a.createdAt ?? '').localeCompare(b.createdAt ?? ''));
+        break;
+      default:
+        break;
+    }
+
+    if (!hasFilters) {
+      result = [...this.songs];
+    }
+
+    this.totalPages = Math.max(1, Math.ceil(result.length / this.pageSize));
+    if (this.currentPage > this.totalPages - 1) {
+      this.currentPage = this.totalPages - 1;
+    }
+
+    const start = this.currentPage * this.pageSize;
+    this.filteredSongs = result.slice(start, start + this.pageSize);
+  }
+
+  get visibleSongs(): Array<SongCatalogResponse & { isFavorite: boolean }> {
+    return this.filteredSongs;
   }
 }

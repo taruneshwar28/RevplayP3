@@ -24,6 +24,8 @@ export interface AuthResponse {
   tokenType: string;
   userId: number;
   email: string;
+  firstName?: string;
+  lastName?: string;
   role: UserRole;
 }
 
@@ -70,6 +72,8 @@ export class AuthService {
     localStorage.setItem('userEmail', auth.email);
     localStorage.setItem('userId', String(auth.userId));
     localStorage.setItem('userRole', auth.role);
+    localStorage.setItem('firstName', auth.firstName ?? '');
+    localStorage.setItem('lastName', auth.lastName ?? '');
 
     if (auth.role === 'ARTIST') {
       localStorage.setItem('artistId', String(auth.userId));
@@ -166,6 +170,8 @@ export class AuthService {
     localStorage.removeItem('userEmail');
     localStorage.removeItem('userId');
     localStorage.removeItem('userRole');
+    localStorage.removeItem('firstName');
+    localStorage.removeItem('lastName');
     localStorage.removeItem('artistId');
   }
 

@@ -17,8 +17,11 @@ export class FavoriteService {
 
   constructor(private readonly http: HttpClient) {}
 
-  add(songId: number): Observable<void> {
-    return this.http.post<void>(`${this.baseUrl}/${songId}`, {});
+  add(songId: number, songTitle?: string, artistName?: string): Observable<void> {
+    return this.http.post<void>(`${this.baseUrl}/${songId}`, {
+      songTitle,
+      artistName,
+    });
   }
 
   remove(songId: number): Observable<void> {
@@ -29,7 +32,11 @@ export class FavoriteService {
     return this.http.get<FavoriteResponse[]>(this.baseUrl);
   }
 
-  check(songId: number): Observable<{ isFavorite: boolean }> {
-    return this.http.get<{ isFavorite: boolean }>(`${this.baseUrl}/${songId}/check`);
+  getCounts(songIds: number[]): Observable<Record<number, number>> {
+    return this.http.get<Record<number, number>>(`${this.baseUrl}/counts`, {
+      params: {
+        ids: songIds,
+      },
+    });
   }
 }

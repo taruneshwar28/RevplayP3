@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
-import { AuthResponse, AuthService, RegisterRequest, UserRole } from '../../../core/services/auth.service';
+import { AuthService, RegisterRequest, UserRole } from '../../../core/services/auth.service';
 
 @Component({
   selector: 'app-register',
@@ -56,11 +56,10 @@ export class RegisterComponent {
     };
 
     this.authService.register(payload).subscribe({
-      next: (response: AuthResponse) => {
-        this.successMessage = 'Registration successful';
-        this.authService.saveSession(response);
+      next: () => {
+        this.successMessage = 'Registration successful. Please login to continue.';
         this.loading = false;
-        this.router.navigate([this.authService.getDefaultRouteForCurrentRole()]);
+        this.router.navigate(['/home/login']);
       },
       error: (error) => {
         const backendMessage = error?.error?.message || error?.error?.error || error?.message || '';

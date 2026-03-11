@@ -1,43 +1,60 @@
 <section class="ui-page">
   <div class="ui-card profile-card">
     <h2 class="ui-title">My Profile</h2>
-    <p class="ui-subtitle">Create or update your user profile.</p>
+    <p class="ui-subtitle">Manage your account and preferences.</p>
 
     <p *ngIf="errorMessage" class="ui-message ui-message-error">{{ errorMessage }}</p>
 
     <div class="ui-form">
       <div class="ui-field">
         <label>Username</label>
-        <input [(ngModel)]="form.username" />
+        <ng-container *ngIf="isEditMode; else usernameView">
+          <input [(ngModel)]="form.username" />
+        </ng-container>
+        <ng-template #usernameView>
+          <div class="profile-value">{{ profile?.username || form.username }}</div>
+        </ng-template>
+      </div>
+
+      <div class="ui-field">
+        <label>Email</label>
+        <div class="profile-value">{{ email }}</div>
+      </div>
+
+      <div class="ui-field">
+        <label>Display Name</label>
+        <ng-container *ngIf="isEditMode; else displayNameView">
+          <input [(ngModel)]="form.displayName" />
+        </ng-container>
+        <ng-template #displayNameView>
+          <div class="profile-value">{{ profile?.displayName || '-' }}</div>
+        </ng-template>
       </div>
 
       <div class="ui-field">
         <label>Bio</label>
-        <textarea [(ngModel)]="form.bio"></textarea>
-      </div>
-
-      <div class="ui-field">
-        <label>Profile Image URL</label>
-        <input [(ngModel)]="form.profileImageUrl" />
+        <ng-container *ngIf="isEditMode; else bioView">
+          <textarea [(ngModel)]="form.bio"></textarea>
+        </ng-container>
+        <ng-template #bioView>
+          <div class="profile-value profile-value-bio">{{ profile?.bio || '-' }}</div>
+        </ng-template>
       </div>
     </div>
 
     <div class="ui-actions">
-      <button type="button" (click)="save()" [disabled]="loading">
-        {{ loading ? 'Saving...' : (creating ? 'Create Profile' : 'Update Profile') }}
+      <button type="button" (click)="onPrimaryAction()" [disabled]="loading">
+        {{ primaryButtonLabel }}
       </button>
-      <button type="button" class="ui-btn-secondary" (click)="validateToken()">Validate Token</button>
-      <button type="button" class="ui-btn-secondary" (click)="refreshToken()">Refresh Token</button>
       <button type="button" class="ui-btn-secondary" (click)="logout()">Logout</button>
     </div>
 
     <hr />
 
-    <h3>Statistics</h3>
+    <h3 class="stats-title">Statistics</h3>
     <div class="stats-grid">
       <p>Total Playlists: {{ stats.playlistCount }}</p>
       <p>Total Favorites: {{ stats.favoriteCount }}</p>
-      <p>Total Listening Time: {{ stats.totalListeningTime }}</p>
     </div>
   </div>
 </section>

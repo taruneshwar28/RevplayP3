@@ -1,5 +1,7 @@
 package com.revplay.player.controller;
 
+import com.revplay.player.dto.ListenerStatsDto;
+import com.revplay.player.dto.PlayHistoryDto;
 import com.revplay.player.entity.ListeningHistory;
 import com.revplay.player.service.ListeningHistoryService;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -7,6 +9,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.Map;
 
@@ -27,25 +31,34 @@ public class InternalController {
     }
 
     @GetMapping("/song/{songId}")
-    public ResponseEntity<List<ListeningHistory>> getSongHistory(@PathVariable Long songId) {
-        List<ListeningHistory> history = listeningHistoryService.getHistoryBySongId(songId);
+    public ResponseEntity<List<PlayHistoryDto>> getSongHistory(
+            @PathVariable Long songId,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+        List<PlayHistoryDto> history = listeningHistoryService.getPlayHistoryBySongId(
+                songId,
+                startDate != null ? startDate.atStartOfDay() : null,
+                endDate != null ? endDate.atTime(LocalTime.MAX) : null
+        );
         return ResponseEntity.ok(history);
     }
 
     @GetMapping("/artist/{artistId}/listeners")
-    public ResponseEntity<Map<String, Long>> getArtistListeners(
-            @PathVariable Long artistId,
-            @RequestBody List<Long> songIds) {
-        // Get listener counts for all songs by this artist
-        Map<String, Long> listenerCounts = listeningHistoryService.getListenerCountsForSongs(songIds);
-        return ResponseEntity.ok(listenerCounts);
+    public ResponseEntity<List<ListenerStatsDto>> getArtistListeners(@PathVariable Long artistId) {
+        List<ListenerStatsDto> listenerStats = listeningHistoryService.getListenerStatsForArtist(artistId);
+        return ResponseEntity.ok(listenerStats);
     }
 
     @GetMapping("/trends")
-    public ResponseEntity<List<Map<String, Object>>> getTrends(
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate) {
-        List<Map<String, Object>> trends = listeningHistoryService.getDailyTrends(startDate, endDate);
+    public ResponseEntity<List<PlayHistoryDto>> getTrends(
+            @RequestParam Long artistId,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+        List<PlayHistoryDto> trends = listeningHistoryService.getPlayHistoryForArtist(
+                artistId,
+                startDate != null ? startDate.atStartOfDay() : null,
+                endDate != null ? endDate.atTime(LocalTime.MAX) : null
+        );
         return ResponseEntity.ok(trends);
     }
 }

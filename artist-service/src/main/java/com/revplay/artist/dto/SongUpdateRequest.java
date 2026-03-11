@@ -1,6 +1,7 @@
 package com.revplay.artist.dto;
 
 import com.revplay.artist.entity.Visibility;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Size;
 
 public class SongUpdateRequest {
@@ -10,7 +11,8 @@ public class SongUpdateRequest {
 
     private String genre;
 
-    private String coverImageUrl;
+    @Min(value = 1, message = "Duration must be at least 1 second")
+    private Integer duration;
 
     private Visibility visibility;
 
@@ -37,12 +39,12 @@ public class SongUpdateRequest {
         this.genre = genre;
     }
 
-    public String getCoverImageUrl() {
-        return coverImageUrl;
+    public Integer getDuration() {
+        return duration;
     }
 
-    public void setCoverImageUrl(String coverImageUrl) {
-        this.coverImageUrl = coverImageUrl;
+    public void setDuration(Integer duration) {
+        this.duration = duration;
     }
 
     public Visibility getVisibility() {
@@ -79,8 +81,8 @@ public class SongUpdateRequest {
             return this;
         }
 
-        public Builder coverImageUrl(String coverImageUrl) {
-            request.coverImageUrl = coverImageUrl;
+        public Builder duration(Integer duration) {
+            request.duration = duration;
             return this;
         }
 

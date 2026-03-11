@@ -9,6 +9,8 @@ public class AuthResponse {
     private String tokenType;
     private Long userId;
     private String email;
+    private String firstName;
+    private String lastName;
     private Role role;
 
     // Constructors
@@ -16,12 +18,14 @@ public class AuthResponse {
         this.tokenType = "Bearer";
     }
 
-    public AuthResponse(String accessToken, String refreshToken, String tokenType, Long userId, String email, Role role) {
+    public AuthResponse(String accessToken, String refreshToken, String tokenType, Long userId, String email, String firstName, String lastName, Role role) {
         this.accessToken = accessToken;
         this.refreshToken = refreshToken;
         this.tokenType = tokenType;
         this.userId = userId;
         this.email = email;
+        this.firstName = firstName;
+        this.lastName = lastName;
         this.role = role;
     }
 
@@ -66,6 +70,22 @@ public class AuthResponse {
         this.email = email;
     }
 
+    public String getFirstName() {
+        return firstName;
+    }
+
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
+    }
+
+    public String getLastName() {
+        return lastName;
+    }
+
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
+    }
+
     public Role getRole() {
         return role;
     }
@@ -81,6 +101,8 @@ public class AuthResponse {
         private String tokenType = "Bearer";
         private Long userId;
         private String email;
+        private String firstName;
+        private String lastName;
         private Role role;
 
         public Builder accessToken(String accessToken) {
@@ -108,13 +130,23 @@ public class AuthResponse {
             return this;
         }
 
+        public Builder firstName(String firstName) {
+            this.firstName = firstName;
+            return this;
+        }
+
+        public Builder lastName(String lastName) {
+            this.lastName = lastName;
+            return this;
+        }
+
         public Builder role(Role role) {
             this.role = role;
             return this;
         }
 
         public AuthResponse build() {
-            return new AuthResponse(accessToken, refreshToken, tokenType, userId, email, role);
+            return new AuthResponse(accessToken, refreshToken, tokenType, userId, email, firstName, lastName, role);
         }
     }
 

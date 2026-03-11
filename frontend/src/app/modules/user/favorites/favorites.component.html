@@ -1,26 +1,25 @@
-<h2>My Favorites</h2>
+<section class="favorites-page">
+  <h2 class="favorites-title">My Favorites</h2>
 
-<div class="card">
-  <label>Check Song ID in Favorites</label>
-  <input type="number" [(ngModel)]="checkSongId" />
-  <button type="button" (click)="checkFavorite()">Check</button>
-  <p *ngIf="checkResult">{{ checkResult }}</p>
-</div>
+  <p *ngIf="loading" class="favorites-state">Loading favorites...</p>
+  <p *ngIf="!loading && errorMessage" class="ui-message ui-message-error favorites-state">{{ errorMessage }}</p>
+  <p *ngIf="!loading && favorites.length === 0 && !errorMessage" class="favorites-state">No favorites yet.</p>
 
-<div *ngIf="favorites.length === 0" class="card">
-  <p>No favorites yet.</p>
-</div>
-
-<div *ngFor="let song of favorites" class="card favorite-row">
-  <div class="song-main">
-    <p class="song-title">{{ song.songTitle }}</p>
-    <p class="song-artist">{{ song.artistName }}</p>
+  <div *ngFor="let song of favorites" class="favorite-row">
+    <div class="song-main">
+      <p class="song-title">{{ song.songTitle }}</p>
+      <p class="song-artist">{{ song.artistName }}</p>
+    </div>
+    <button
+      type="button"
+      class="favorite-toggle favorite-on"
+      (click)="remove(song.songId)"
+      aria-label="Remove from favorites">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path
+          d="M12 20.8 4.9 13.9a4.8 4.8 0 0 1 0-6.9 5 5 0 0 1 7 0L12 8l.1-.1a5 5 0 0 1 7 0 4.8 4.8 0 0 1 0 6.9Z"
+        />
+      </svg>
+    </button>
   </div>
-  <button
-    type="button"
-    class="favorite-toggle favorite-on"
-    (click)="remove(song.songId)"
-    aria-label="Remove from favorites">
-    Remove
-  </button>
-</div>
+</section>

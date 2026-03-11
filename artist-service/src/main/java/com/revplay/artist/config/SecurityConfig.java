@@ -16,9 +16,8 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/internal/**").permitAll()
-                        .requestMatchers("/api/artists/{artistId}").permitAll()
-                        .anyRequest().authenticated()
+                        .requestMatchers("/api/**").permitAll()
+                        .anyRequest().permitAll()
                 )
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)

@@ -8,8 +8,8 @@ import { FavoriteResponse, FavoriteService } from 'src/app/core/services/favorit
 })
 export class FavoritesComponent implements OnInit {
   favorites: FavoriteResponse[] = [];
-  checkSongId: number | null = null;
-  checkResult = '';
+  loading = false;
+  errorMessage = '';
 
   constructor(private readonly favoriteService: FavoriteService) {}
 
@@ -18,12 +18,17 @@ export class FavoritesComponent implements OnInit {
   }
 
   loadFavorites(): void {
+    this.loading = true;
+    this.errorMessage = '';
     this.favoriteService.get().subscribe({
       next: (rows) => {
         this.favorites = rows;
+        this.loading = false;
       },
       error: () => {
         this.favorites = [];
+        this.loading = false;
+        this.errorMessage = 'Unable to load favorites.';
       },
     });
   }
@@ -36,22 +41,7 @@ export class FavoritesComponent implements OnInit {
       next: () => {},
       error: () => {
         this.favorites = previous;
-      },
-    });
-  }
-
-  checkFavorite(): void {
-    if (!this.checkSongId) {
-      this.checkResult = 'Enter a valid song ID';
-      return;
-    }
-
-    this.favoriteService.check(this.checkSongId).subscribe({
-      next: (res) => {
-        this.checkResult = res.isFavorite ? 'Song is in favorites' : 'Song is not in favorites';
-      },
-      error: () => {
-        this.checkResult = 'Failed to check favorite status';
+        this.errorMessage = 'Unable to remove favorite right now.';
       },
     });
   }

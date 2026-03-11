@@ -32,8 +32,12 @@ public interface ListeningHistoryRepository extends JpaRepository<ListeningHisto
 
     List<ListeningHistory> findBySongId(Long songId);
 
+    List<ListeningHistory> findBySongIdAndPlayedAtBetween(Long songId, LocalDateTime startDate, LocalDateTime endDate);
+
     @Query("SELECT lh FROM ListeningHistory lh WHERE lh.songId IN :songIds")
     List<ListeningHistory> findBySongIdIn(@Param("songIds") List<Long> songIds);
+
+    List<ListeningHistory> findBySongIdInAndPlayedAtBetween(List<Long> songIds, LocalDateTime startDate, LocalDateTime endDate);
 
     @Query("SELECT lh.songId, COUNT(lh) as playCount FROM ListeningHistory lh WHERE lh.userId = :userId GROUP BY lh.songId ORDER BY playCount DESC")
     List<Object[]> findTopSongsByUserId(@Param("userId") Long userId, Pageable pageable);
@@ -43,4 +47,13 @@ public interface ListeningHistoryRepository extends JpaRepository<ListeningHisto
 
     @Query("SELECT lh.songId, COUNT(DISTINCT lh.userId) as listenerCount FROM ListeningHistory lh WHERE lh.songId IN :songIds GROUP BY lh.songId")
     List<Object[]> findListenerCountsBySongIds(@Param("songIds") List<Long> songIds);
+
+    @Query("""
+            SELECT lh.userId, COUNT(lh) as playCount, COALESCE(SUM(lh.duration), 0) as totalDuration
+            FROM ListeningHistory lh
+            WHERE lh.songId IN :songIds
+            GROUP BY lh.userId
+            ORDER BY playCount DESC
+            """)
+    List<Object[]> findTopListenersBySongIds(@Param("songIds") List<Long> songIds);
 }

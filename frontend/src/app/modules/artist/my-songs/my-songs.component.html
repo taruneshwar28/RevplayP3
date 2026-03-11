@@ -9,6 +9,9 @@
     </div>
   </div>
 
+  <p *ngIf="successMessage" class="ui-message ui-message-success">{{ successMessage }}</p>
+  <p *ngIf="errorMessage" class="ui-message ui-message-error">{{ errorMessage }}</p>
+
   <div *ngIf="songs.length === 0" class="ui-card empty-card">No songs uploaded yet.</div>
 
   <div *ngFor="let song of songs" class="ui-card song-card">
@@ -57,22 +60,9 @@
           <input [(ngModel)]="editForm.duration" type="number" placeholder="Duration" />
         </div>
         <div class="ui-field">
-          <label>File URL</label>
-          <input [(ngModel)]="editForm.fileUrl" placeholder="https://..." />
-        </div>
-        <div class="ui-field">
-          <label>Cover URL</label>
-          <input [(ngModel)]="editForm.coverImageUrl" placeholder="https://..." />
-        </div>
-        <div class="ui-field">
-          <label>Album ID</label>
-          <input [(ngModel)]="editForm.albumId" type="number" placeholder="optional" />
-        </div>
-        <div class="ui-field">
           <label>Visibility</label>
           <select [(ngModel)]="editForm.visibility">
             <option value="PUBLIC">PUBLIC</option>
-            <option value="PRIVATE">PRIVATE</option>
             <option value="UNLISTED">UNLISTED</option>
           </select>
         </div>

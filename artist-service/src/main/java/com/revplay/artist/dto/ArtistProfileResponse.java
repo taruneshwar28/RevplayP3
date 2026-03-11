@@ -8,6 +8,11 @@ public class ArtistProfileResponse {
     private Long userId;
     private String stageName;
     private String bio;
+    private String genre;
+    private String instagramUrl;
+    private String twitterUrl;
+    private String youtubeUrl;
+    private String websiteUrl;
     private String profileImageUrl;
     private Boolean verified;
     private Long songCount;
@@ -58,6 +63,46 @@ public class ArtistProfileResponse {
 
     public void setProfileImageUrl(String profileImageUrl) {
         this.profileImageUrl = profileImageUrl;
+    }
+
+    public String getGenre() {
+        return genre;
+    }
+
+    public void setGenre(String genre) {
+        this.genre = genre;
+    }
+
+    public String getInstagramUrl() {
+        return instagramUrl;
+    }
+
+    public void setInstagramUrl(String instagramUrl) {
+        this.instagramUrl = instagramUrl;
+    }
+
+    public String getTwitterUrl() {
+        return twitterUrl;
+    }
+
+    public void setTwitterUrl(String twitterUrl) {
+        this.twitterUrl = twitterUrl;
+    }
+
+    public String getYoutubeUrl() {
+        return youtubeUrl;
+    }
+
+    public void setYoutubeUrl(String youtubeUrl) {
+        this.youtubeUrl = youtubeUrl;
+    }
+
+    public String getWebsiteUrl() {
+        return websiteUrl;
+    }
+
+    public void setWebsiteUrl(String websiteUrl) {
+        this.websiteUrl = websiteUrl;
     }
 
     public Boolean getVerified() {
@@ -125,6 +170,31 @@ public class ArtistProfileResponse {
 
         public Builder bio(String bio) {
             response.bio = bio;
+            return this;
+        }
+
+        public Builder genre(String genre) {
+            response.genre = genre;
+            return this;
+        }
+
+        public Builder instagramUrl(String instagramUrl) {
+            response.instagramUrl = instagramUrl;
+            return this;
+        }
+
+        public Builder twitterUrl(String twitterUrl) {
+            response.twitterUrl = twitterUrl;
+            return this;
+        }
+
+        public Builder youtubeUrl(String youtubeUrl) {
+            response.youtubeUrl = youtubeUrl;
+            return this;
+        }
+
+        public Builder websiteUrl(String websiteUrl) {
+            response.websiteUrl = websiteUrl;
             return this;
         }
 

@@ -2,7 +2,6 @@ import { Component, OnInit } from '@angular/core';
 import {
   ListeningHistoryItem,
   ListeningHistoryService,
-  UserHistoryStatsResponse,
 } from '../../core/service/listening-history.service';
 
 @Component({
@@ -12,29 +11,13 @@ import {
 })
 export class ListeningHistoryComponent implements OnInit {
   historyItems: ListeningHistoryItem[] = [];
-  topSongs: Array<Record<string, unknown>> = [];
-  stats: UserHistoryStatsResponse = {
-    totalSongsPlayed: 0,
-    totalListeningTimeSeconds: 0,
-    uniqueSongsPlayed: 0,
-    topGenres: [],
-  };
-
-  durationDraft: Record<number, number> = {};
-
   loading = false;
   errorMessage = '';
 
   constructor(private readonly listeningHistoryService: ListeningHistoryService) {}
 
   ngOnInit(): void {
-    this.loadAll();
-  }
-
-  loadAll(): void {
     this.loadHistory();
-    this.loadStats();
-    this.loadTopSongs();
   }
 
   clearHistory(): void {
@@ -42,7 +25,8 @@ export class ListeningHistoryComponent implements OnInit {
     this.errorMessage = '';
     this.listeningHistoryService.clearHistory().subscribe({
       next: () => {
-        this.loadAll();
+        this.historyItems = [];
+        this.loading = false;
       },
       error: () => {
         this.loading = false;
@@ -51,25 +35,8 @@ export class ListeningHistoryComponent implements OnInit {
     });
   }
 
-  updateDuration(item: ListeningHistoryItem): void {
-    const duration = this.durationDraft[item.id];
-    if (!duration || duration < 0) {
-      this.errorMessage = 'Enter a valid duration';
-      return;
-    }
-
-    this.listeningHistoryService.updatePlayDuration(item.id, duration).subscribe({
-      next: () => {
-        this.loadHistory();
-      },
-      error: () => {
-        this.errorMessage = 'Unable to update duration';
-      },
-    });
-  }
-
   trackByHistoryId(index: number, item: ListeningHistoryItem): string {
-    return `${item.id}-${index}`;
+    return `${item.songId}-${index}`;
   }
 
   private loadHistory(): void {
@@ -77,7 +44,7 @@ export class ListeningHistoryComponent implements OnInit {
     this.errorMessage = '';
     this.listeningHistoryService.getRecentHistory(0, 50).subscribe({
       next: (items) => {
-        this.historyItems = items;
+        this.historyItems = this.getUniqueRecentSongs(items);
         this.loading = false;
       },
       error: () => {
@@ -88,30 +55,15 @@ export class ListeningHistoryComponent implements OnInit {
     });
   }
 
-  private loadStats(): void {
-    this.listeningHistoryService.getStats().subscribe({
-      next: (res) => {
-        this.stats = res;
-      },
-      error: () => {
-        this.stats = {
-          totalSongsPlayed: 0,
-          totalListeningTimeSeconds: 0,
-          uniqueSongsPlayed: 0,
-          topGenres: [],
-        };
-      },
-    });
-  }
+  private getUniqueRecentSongs(items: ListeningHistoryItem[]): ListeningHistoryItem[] {
+    const uniqueItems = new Map<number, ListeningHistoryItem>();
 
-  private loadTopSongs(): void {
-    this.listeningHistoryService.getTopSongs(10).subscribe({
-      next: (rows) => {
-        this.topSongs = rows;
-      },
-      error: () => {
-        this.topSongs = [];
-      },
-    });
+    for (const item of items) {
+      if (!uniqueItems.has(item.songId)) {
+        uniqueItems.set(item.songId, item);
+      }
+    }
+
+    return Array.from(uniqueItems.values()).slice(0, 50);
   }
 }

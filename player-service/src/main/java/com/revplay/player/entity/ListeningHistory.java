@@ -17,6 +17,10 @@ public class ListeningHistory {
     @Column(nullable = false)
     private Long songId;
 
+    private String songTitleSnapshot;
+
+    private String artistNameSnapshot;
+
     @Column(nullable = false)
     private LocalDateTime playedAt;
 
@@ -66,8 +70,24 @@ public class ListeningHistory {
         return playedAt;
     }
 
+    public String getSongTitleSnapshot() {
+        return songTitleSnapshot;
+    }
+
+    public String getArtistNameSnapshot() {
+        return artistNameSnapshot;
+    }
+
     public void setPlayedAt(LocalDateTime playedAt) {
         this.playedAt = playedAt;
+    }
+
+    public void setSongTitleSnapshot(String songTitleSnapshot) {
+        this.songTitleSnapshot = songTitleSnapshot;
+    }
+
+    public void setArtistNameSnapshot(String artistNameSnapshot) {
+        this.artistNameSnapshot = artistNameSnapshot;
     }
 
     public Integer getDuration() {
@@ -82,6 +102,8 @@ public class ListeningHistory {
         private Long id;
         private Long userId;
         private Long songId;
+        private String songTitleSnapshot;
+        private String artistNameSnapshot;
         private LocalDateTime playedAt;
         private Integer duration;
 
@@ -100,6 +122,16 @@ public class ListeningHistory {
             return this;
         }
 
+        public Builder songTitleSnapshot(String songTitleSnapshot) {
+            this.songTitleSnapshot = songTitleSnapshot;
+            return this;
+        }
+
+        public Builder artistNameSnapshot(String artistNameSnapshot) {
+            this.artistNameSnapshot = artistNameSnapshot;
+            return this;
+        }
+
         public Builder playedAt(LocalDateTime playedAt) {
             this.playedAt = playedAt;
             return this;
@@ -111,7 +143,10 @@ public class ListeningHistory {
         }
 
         public ListeningHistory build() {
-            return new ListeningHistory(this);
+            ListeningHistory history = new ListeningHistory(this);
+            history.songTitleSnapshot = this.songTitleSnapshot;
+            history.artistNameSnapshot = this.artistNameSnapshot;
+            return history;
         }
     }
 }

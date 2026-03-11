@@ -38,11 +38,11 @@ public class PlaylistService {
                 .userId(userId)
                 .name(request.getName())
                 .description(request.getDescription())
-                .isPublic(request.getIsPublic())
+                .isPublic(Boolean.TRUE.equals(request.getIsPublic()))
                 .build();
 
         Playlist savedPlaylist = playlistRepository.save(playlist);
-        return mapToResponse(savedPlaylist, new ArrayList<>());
+        return mapToResponse(savedPlaylist, new ArrayList<>(), 0);
     }
 
     @Transactional(readOnly = true)
@@ -51,9 +51,7 @@ public class PlaylistService {
         return playlists.stream()
                 .map(playlist -> {
                     Long songCount = playlistSongRepository.countByPlaylistId(playlist.getId());
-                    PlaylistResponse response = mapToResponse(playlist, new ArrayList<>());
-                    response.setSongCount(songCount.intValue());
-                    return response;
+                    return mapToResponse(playlist, new ArrayList<>(), songCount.intValue());
                 })
                 .collect(Collectors.toList());
     }
@@ -79,7 +77,7 @@ public class PlaylistService {
             }
         }
 
-        return mapToResponse(playlist, songs);
+        return mapToResponse(playlist, songs, playlistSongs.size());
     }
 
     @Transactional
@@ -87,18 +85,19 @@ public class PlaylistService {
         Playlist playlist = playlistRepository.findByUserIdAndId(userId, playlistId)
                 .orElseThrow(() -> new ResourceNotFoundException("Playlist not found with id: " + playlistId));
 
-        if (request.getName() != null) {
-            playlist.setName(request.getName());
+        if (request.getName() != null && !request.getName().trim().isEmpty()) {
+            playlist.setName(request.getName().trim());
         }
         if (request.getDescription() != null) {
-            playlist.setDescription(request.getDescription());
+            playlist.setDescription(request.getDescription().trim());
         }
         if (request.getIsPublic() != null) {
             playlist.setIsPublic(request.getIsPublic());
         }
 
         Playlist updatedPlaylist = playlistRepository.save(playlist);
-        return mapToResponse(updatedPlaylist, new ArrayList<>());
+        int songCount = playlistSongRepository.countByPlaylistId(updatedPlaylist.getId()).intValue();
+        return mapToResponse(updatedPlaylist, new ArrayList<>(), songCount);
     }
 
     @Transactional
@@ -112,19 +111,19 @@ public class PlaylistService {
 
     @Transactional
     public void addSong(Long userId, Long playlistId, PlaylistSongRequest request) {
-        Playlist playlist = playlistRepository.findByUserIdAndId(userId, playlistId)
+        playlistRepository.findByUserIdAndId(userId, playlistId)
                 .orElseThrow(() -> new ResourceNotFoundException("Playlist not found with id: " + playlistId));
 
-        // Verify song exists in artist service
-        try {
-            artistServiceClient.getSongById(request.getSongId());
-        } catch (Exception e) {
-            throw new ResourceNotFoundException("Song not found with id: " + request.getSongId());
+        boolean alreadyExists = playlistSongRepository.findByPlaylistIdOrderByPosition(playlistId).stream()
+                .anyMatch(song -> song.getSongId().equals(request.getSongId()));
+        if (alreadyExists) {
+            return;
         }
 
         Integer position = request.getPosition();
         if (position == null) {
-            position = playlistSongRepository.findMaxPositionByPlaylistId(playlistId) + 1;
+            Integer maxPosition = playlistSongRepository.findMaxPositionByPlaylistId(playlistId);
+            position = (maxPosition != null ? maxPosition : 0) + 1;
         }
 
         PlaylistSong playlistSong = PlaylistSong.builder()
@@ -138,19 +137,19 @@ public class PlaylistService {
 
     @Transactional
     public void removeSong(Long userId, Long playlistId, Long songId) {
-        Playlist playlist = playlistRepository.findByUserIdAndId(userId, playlistId)
+        playlistRepository.findByUserIdAndId(userId, playlistId)
                 .orElseThrow(() -> new ResourceNotFoundException("Playlist not found with id: " + playlistId));
 
         playlistSongRepository.deleteByPlaylistIdAndSongId(playlistId, songId);
     }
 
-    private PlaylistResponse mapToResponse(Playlist playlist, List<SongDto> songs) {
+    private PlaylistResponse mapToResponse(Playlist playlist, List<SongDto> songs, int songCount) {
         return PlaylistResponse.builder()
                 .id(playlist.getId())
                 .name(playlist.getName())
                 .description(playlist.getDescription())
                 .isPublic(playlist.getIsPublic())
-                .songCount(songs.size())
+                .songCount(songCount)
                 .songs(songs)
                 .createdAt(playlist.getCreatedAt())
                 .build();

@@ -19,6 +19,10 @@ public class Favorite {
     @Column(nullable = false)
     private Long songId;
 
+    private String songTitleSnapshot;
+
+    private String artistNameSnapshot;
+
     @Column(nullable = false, updatable = false)
     private LocalDateTime addedAt;
 
@@ -47,6 +51,14 @@ public class Favorite {
         return addedAt;
     }
 
+    public String getSongTitleSnapshot() {
+        return songTitleSnapshot;
+    }
+
+    public String getArtistNameSnapshot() {
+        return artistNameSnapshot;
+    }
+
     // Setters
     public void setId(Long id) {
         this.id = id;
@@ -62,6 +74,14 @@ public class Favorite {
 
     public void setAddedAt(LocalDateTime addedAt) {
         this.addedAt = addedAt;
+    }
+
+    public void setSongTitleSnapshot(String songTitleSnapshot) {
+        this.songTitleSnapshot = songTitleSnapshot;
+    }
+
+    public void setArtistNameSnapshot(String artistNameSnapshot) {
+        this.artistNameSnapshot = artistNameSnapshot;
     }
 
     // Builder
@@ -93,6 +113,16 @@ public class Favorite {
 
         public Builder addedAt(LocalDateTime addedAt) {
             favorite.addedAt = addedAt;
+            return this;
+        }
+
+        public Builder songTitleSnapshot(String songTitleSnapshot) {
+            favorite.songTitleSnapshot = songTitleSnapshot;
+            return this;
+        }
+
+        public Builder artistNameSnapshot(String artistNameSnapshot) {
+            favorite.artistNameSnapshot = artistNameSnapshot;
             return this;
         }
 

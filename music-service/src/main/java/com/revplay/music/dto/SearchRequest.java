@@ -46,7 +46,6 @@ public class SearchRequest {
         }
     }
 
-    // Getters and Setters
     public String getQuery() {
         return query;
     }

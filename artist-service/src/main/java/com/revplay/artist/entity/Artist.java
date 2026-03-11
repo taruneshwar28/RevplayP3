@@ -20,6 +20,16 @@ public class Artist {
     @Column(length = 1000)
     private String bio;
 
+    private String genre;
+
+    private String instagramUrl;
+
+    private String twitterUrl;
+
+    private String youtubeUrl;
+
+    private String websiteUrl;
+
     private String profileImageUrl;
 
     @Column(nullable = false)
@@ -87,6 +97,46 @@ public class Artist {
         this.profileImageUrl = profileImageUrl;
     }
 
+    public String getGenre() {
+        return genre;
+    }
+
+    public void setGenre(String genre) {
+        this.genre = genre;
+    }
+
+    public String getInstagramUrl() {
+        return instagramUrl;
+    }
+
+    public void setInstagramUrl(String instagramUrl) {
+        this.instagramUrl = instagramUrl;
+    }
+
+    public String getTwitterUrl() {
+        return twitterUrl;
+    }
+
+    public void setTwitterUrl(String twitterUrl) {
+        this.twitterUrl = twitterUrl;
+    }
+
+    public String getYoutubeUrl() {
+        return youtubeUrl;
+    }
+
+    public void setYoutubeUrl(String youtubeUrl) {
+        this.youtubeUrl = youtubeUrl;
+    }
+
+    public String getWebsiteUrl() {
+        return websiteUrl;
+    }
+
+    public void setWebsiteUrl(String websiteUrl) {
+        this.websiteUrl = websiteUrl;
+    }
+
     public Boolean getVerified() {
         return verified;
     }
@@ -136,6 +186,31 @@ public class Artist {
 
         public Builder bio(String bio) {
             artist.bio = bio;
+            return this;
+        }
+
+        public Builder genre(String genre) {
+            artist.genre = genre;
+            return this;
+        }
+
+        public Builder instagramUrl(String instagramUrl) {
+            artist.instagramUrl = instagramUrl;
+            return this;
+        }
+
+        public Builder twitterUrl(String twitterUrl) {
+            artist.twitterUrl = twitterUrl;
+            return this;
+        }
+
+        public Builder youtubeUrl(String youtubeUrl) {
+            artist.youtubeUrl = youtubeUrl;
+            return this;
+        }
+
+        public Builder websiteUrl(String websiteUrl) {
+            artist.websiteUrl = websiteUrl;
             return this;
         }
 

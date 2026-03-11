@@ -1,9 +1,17 @@
 package com.revplay.analytics.service;
 
-import com.revplay.analytics.client.ArtistServiceClient;
 import com.revplay.analytics.client.PlayerServiceClient;
 import com.revplay.analytics.client.UserServiceClient;
-import com.revplay.analytics.dto.*;
+import com.revplay.analytics.dto.AnalyticsOverviewResponse;
+import com.revplay.analytics.dto.DailyTrendData;
+import com.revplay.analytics.dto.ListenerStatsDto;
+import com.revplay.analytics.dto.ListeningTrendResponse;
+import com.revplay.analytics.dto.PlayHistoryDto;
+import com.revplay.analytics.dto.SongDto;
+import com.revplay.analytics.dto.SongPerformanceResponse;
+import com.revplay.analytics.dto.TopListenerResponse;
+import com.revplay.analytics.dto.TopSongsResponse;
+import com.revplay.analytics.dto.UserDto;
 import com.revplay.analytics.exception.ServiceUnavailableException;
 import feign.FeignException;
 import org.slf4j.Logger;
@@ -12,7 +20,10 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 import java.util.stream.Collectors;
 
 @Service
@@ -21,13 +32,13 @@ public class AnalyticsService {
     private static final Logger logger = LoggerFactory.getLogger(AnalyticsService.class);
 
     private final PlayerServiceClient playerServiceClient;
-    private final ArtistServiceClient artistServiceClient;
+    private final com.revplay.analytics.client.ArtistServiceClient artistServiceClient;
     private final UserServiceClient userServiceClient;
     private final AggregationService aggregationService;
 
     public AnalyticsService(
             PlayerServiceClient playerServiceClient,
-            ArtistServiceClient artistServiceClient,
+            com.revplay.analytics.client.ArtistServiceClient artistServiceClient,
             UserServiceClient userServiceClient,
             AggregationService aggregationService
     ) {
@@ -37,7 +48,6 @@ public class AnalyticsService {
         this.aggregationService = aggregationService;
     }
 
-    @Cacheable(value = "artistOverview", key = "#artistId + '_' + #period")
     public AnalyticsOverviewResponse getArtistOverview(Long artistId, String period) {
         logger.info("Getting artist overview for artist {} in period {}", artistId, period);
 
@@ -54,7 +64,6 @@ public class AnalyticsService {
             Double totalListeningTime = aggregationService.calculateTotalListeningTime(plays);
             Double avgDuration = aggregationService.calculateAveragePlayDuration(plays);
 
-            // Find top song
             Map<Long, Long> songPlayCounts = plays.stream()
                     .collect(Collectors.groupingBy(
                             PlayHistoryDto::getSongId,
@@ -97,12 +106,10 @@ public class AnalyticsService {
         }
     }
 
-    @Cacheable(value = "songPerformance", key = "#artistId")
     public List<SongPerformanceResponse> getSongPerformance(Long artistId) {
         logger.info("Getting song performance for artist {}", artistId);
 
         try {
-            // Get all songs for the artist
             List<SongDto> songs = artistServiceClient.getArtistSongs(artistId);
 
             List<SongPerformanceResponse> performances = new ArrayList<>();
@@ -140,13 +147,10 @@ public class AnalyticsService {
 
                 } catch (FeignException e) {
                     logger.warn("Failed to fetch play history for song {}: {}", song.getId(), e.getMessage());
-                    // Continue with next song
                 }
             }
 
-            // Sort by play count descending
             performances.sort((a, b) -> Long.compare(b.getPlayCount(), a.getPlayCount()));
-
             return performances;
 
         } catch (FeignException e) {
@@ -155,7 +159,6 @@ public class AnalyticsService {
         }
     }
 
-    @Cacheable(value = "topSongs", key = "#artistId + '_' + #limit")
     public TopSongsResponse getTopSongs(Long artistId, Integer limit, String period) {
         logger.info("Getting top {} songs for artist {} in period {}", limit, artistId, period);
 
@@ -172,7 +175,6 @@ public class AnalyticsService {
                 .build();
     }
 
-    @Cacheable(value = "listeningTrends", key = "#artistId + '_' + #startDate + '_' + #endDate")
     public ListeningTrendResponse getListeningTrends(Long artistId, LocalDate startDate, LocalDate endDate) {
         logger.info("Getting listening trends for artist {} from {} to {}", artistId, startDate, endDate);
 
@@ -189,7 +191,6 @@ public class AnalyticsService {
         }
     }
 
-    @Cacheable(value = "topListeners", key = "#artistId + '_' + #limit")
     public List<TopListenerResponse> getTopListeners(Long artistId, Integer limit) {
         logger.info("Getting top {} listeners for artist {}", limit, artistId);
 

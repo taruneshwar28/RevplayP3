@@ -15,13 +15,6 @@ export interface ListeningHistoryItem {
   listenedDuration: number;
 }
 
-export interface UserHistoryStatsResponse {
-  totalSongsPlayed: number;
-  totalListeningTimeSeconds: number;
-  uniqueSongsPlayed: number;
-  topGenres: string[];
-}
-
 export interface PlayResponse {
   songId: number;
   title: string;
@@ -30,15 +23,6 @@ export interface PlayResponse {
   fileUrl: string;
   coverImageUrl?: string;
   duration: number;
-}
-
-export interface NowPlayingResponse {
-  songId: number;
-  title: string;
-  artistName: string;
-  albumTitle: string;
-  coverImageUrl?: string;
-  startedAt: string;
 }
 
 interface HistoryPage {
@@ -57,16 +41,6 @@ export class ListeningHistoryService {
     return this.http.post<PlayResponse>(`${this.baseUrl}/player/play`, { songId });
   }
 
-  updatePlayDuration(historyId: number, duration: number): Observable<{ message: string }> {
-    return this.http.put<{ message: string }>(`${this.baseUrl}/player/play/${historyId}/duration`, {
-      duration,
-    });
-  }
-
-  getNowPlaying(): Observable<NowPlayingResponse> {
-    return this.http.get<NowPlayingResponse>(`${this.baseUrl}/player/now-playing`);
-  }
-
   getRecentHistory(page = 0, size = 20): Observable<ListeningHistoryItem[]> {
     return this.http
       .get<HistoryPage>(`${this.baseUrl}/history/recent`, {
@@ -77,15 +51,5 @@ export class ListeningHistoryService {
 
   clearHistory(): Observable<{ message: string }> {
     return this.http.delete<{ message: string }>(`${this.baseUrl}/history`);
-  }
-
-  getStats(): Observable<UserHistoryStatsResponse> {
-    return this.http.get<UserHistoryStatsResponse>(`${this.baseUrl}/history/stats`);
-  }
-
-  getTopSongs(limit = 10): Observable<Array<Record<string, unknown>>> {
-    return this.http.get<Array<Record<string, unknown>>>(`${this.baseUrl}/history/top-songs`, {
-      params: { limit },
-    });
   }
 }

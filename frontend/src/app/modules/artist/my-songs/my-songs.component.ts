@@ -9,13 +9,13 @@ import { SongResponse, SongService, SongVisibility } from 'src/app/core/services
 export class MySongsComponent implements OnInit {
   songs: SongResponse[] = [];
   editingSongId: number | null = null;
+  errorMessage = '';
+  successMessage = '';
   editForm: Partial<SongResponse> = {
     title: '',
     genre: '',
     duration: 0,
     visibility: 'PUBLIC',
-    coverImageUrl: '',
-    fileUrl: '',
   };
 
   constructor(private readonly songService: SongService) {}
@@ -25,6 +25,7 @@ export class MySongsComponent implements OnInit {
   }
 
   loadSongs(): void {
+    this.errorMessage = '';
     this.songService.getSongs().subscribe({
       next: (res) => {
         this.songs = res;
@@ -42,9 +43,6 @@ export class MySongsComponent implements OnInit {
       genre: song.genre,
       duration: song.duration,
       visibility: song.visibility,
-      coverImageUrl: song.coverImageUrl,
-      fileUrl: song.fileUrl,
-      albumId: song.albumId,
     };
   }
 
@@ -53,20 +51,23 @@ export class MySongsComponent implements OnInit {
   }
 
   updateSong(songId: number): void {
+    this.errorMessage = '';
+    this.successMessage = '';
     this.songService
       .updateSong(songId, {
         title: this.editForm.title,
         genre: this.editForm.genre,
         duration: Number(this.editForm.duration),
         visibility: this.editForm.visibility as SongVisibility,
-        coverImageUrl: this.editForm.coverImageUrl,
-        fileUrl: this.editForm.fileUrl,
-        albumId: this.editForm.albumId,
       })
       .subscribe({
-        next: () => {
+        next: (updatedSong) => {
+          this.songs = this.songs.map((song) => (song.id === songId ? updatedSong : song));
           this.editingSongId = null;
-          this.loadSongs();
+          this.successMessage = 'Song updated successfully.';
+        },
+        error: (err) => {
+          this.errorMessage = this.getErrorMessage(err, 'Failed to update the song.');
         },
       });
   }
@@ -76,20 +77,49 @@ export class MySongsComponent implements OnInit {
       return;
     }
 
+    this.errorMessage = '';
+    this.successMessage = '';
     this.songService.deleteSong(songId).subscribe({
       next: () => {
-        this.loadSongs();
+        this.songs = this.songs.filter((song) => song.id !== songId);
+        if (this.editingSongId === songId) {
+          this.editingSongId = null;
+        }
+        this.successMessage = 'Song deleted successfully.';
+      },
+      error: (err) => {
+        this.errorMessage = this.getErrorMessage(err, 'Failed to delete the song.');
       },
     });
   }
 
   toggleVisibility(song: SongResponse): void {
-    const newVisibility: SongVisibility = song.visibility === 'PUBLIC' ? 'PRIVATE' : 'PUBLIC';
+    this.errorMessage = '';
+    this.successMessage = '';
+    const newVisibility: SongVisibility = song.visibility === 'PUBLIC' ? 'UNLISTED' : 'PUBLIC';
 
     this.songService.updateVisibility(song.id, newVisibility).subscribe({
       next: (updatedSong) => {
         this.songs = this.songs.map((s) => (s.id === song.id ? updatedSong : s));
+        this.successMessage = 'Visibility updated successfully.';
+      },
+      error: (err) => {
+        this.errorMessage = this.getErrorMessage(err, 'Failed to update visibility.');
       },
     });
+  }
+
+  private getErrorMessage(err: any, fallback: string): string {
+    const validationErrors = err?.error?.errors as Record<string, string> | undefined;
+    if (validationErrors && Object.keys(validationErrors).length > 0) {
+      return Object.values(validationErrors)[0];
+    }
+
+    return (
+      err?.error?.message ||
+      err?.error?.error ||
+      (typeof err?.error === 'string' ? err.error : '') ||
+      fallback
+    );
   }
 }

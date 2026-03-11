@@ -1,12 +1,12 @@
 package com.revplay.player.service;
 
 import com.revplay.player.client.ArtistServiceClient;
+import com.revplay.player.dto.ListenerStatsDto;
 import com.revplay.player.dto.ListeningHistoryResponse;
+import com.revplay.player.dto.PlayHistoryDto;
 import com.revplay.player.dto.SongDto;
-import com.revplay.player.dto.UserHistoryStatsResponse;
 import com.revplay.player.entity.ListeningHistory;
 import com.revplay.player.repository.ListeningHistoryRepository;
-import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -14,8 +14,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 public class ListeningHistoryService {
@@ -29,38 +29,20 @@ public class ListeningHistoryService {
         this.artistServiceClient = artistServiceClient;
     }
 
-    @CircuitBreaker(name = "artistService", fallbackMethod = "getRecentHistoryFallback")
     public Page<ListeningHistoryResponse> getRecentHistory(Long userId, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
         Page<ListeningHistory> historyPage = listeningHistoryRepository.findByUserIdOrderByPlayedAtDesc(userId, pageable);
 
-        return historyPage.map(history -> {
-            try {
-                SongDto song = artistServiceClient.getSongById(history.getSongId());
-                return ListeningHistoryResponse.builder()
-                        .id(history.getId())
-                        .songId(history.getSongId())
-                        .songTitle(song.getTitle())
-                        .artistName(song.getArtistName())
-                        .albumTitle(song.getAlbumTitle())
-                        .coverImageUrl(song.getCoverImageUrl())
-                        .playedAt(history.getPlayedAt())
-                        .listenedDuration(history.getDuration())
-                        .build();
-            } catch (Exception e) {
-                // Fallback: return history without song details
-                return ListeningHistoryResponse.builder()
-                        .id(history.getId())
-                        .songId(history.getSongId())
-                        .songTitle("Unknown")
-                        .artistName("Unknown")
-                        .albumTitle("Unknown")
-                        .coverImageUrl(null)
-                        .playedAt(history.getPlayedAt())
-                        .listenedDuration(history.getDuration())
-                        .build();
-            }
-        });
+        return historyPage.map(history -> ListeningHistoryResponse.builder()
+                .id(history.getId())
+                .songId(history.getSongId())
+                .songTitle(defaultValue(null, history.getSongTitleSnapshot(), "Unknown"))
+                .artistName(defaultValue(null, history.getArtistNameSnapshot(), "Unknown"))
+                .albumTitle("Unknown")
+                .coverImageUrl(null)
+                .playedAt(history.getPlayedAt())
+                .listenedDuration(history.getDuration())
+                .build());
     }
 
     @Transactional
@@ -68,87 +50,15 @@ public class ListeningHistoryService {
         listeningHistoryRepository.deleteByUserId(userId);
     }
 
-    public UserHistoryStatsResponse getStats(Long userId) {
-        long totalSongsPlayed = listeningHistoryRepository.countByUserId(userId);
-        Long totalListeningTime = listeningHistoryRepository.sumDurationByUserId(userId);
-        if (totalListeningTime == null) {
-            totalListeningTime = 0L;
-        }
-
-        List<Long> uniqueSongIds = listeningHistoryRepository.findDistinctSongIdsByUserId(userId);
-        long uniqueSongsPlayed = uniqueSongIds.size();
-
-        // For now, return empty top genres (would need genre data from artist-service)
-        List<String> topGenres = new ArrayList<>();
-
-        return UserHistoryStatsResponse.builder()
-                .totalSongsPlayed(totalSongsPlayed)
-                .totalListeningTimeSeconds(totalListeningTime)
-                .uniqueSongsPlayed(uniqueSongsPlayed)
-                .topGenres(topGenres)
-                .build();
-    }
-
-    public List<ListeningHistoryResponse> getHistoryByDateRange(Long userId, LocalDateTime startDate, LocalDateTime endDate) {
-        List<ListeningHistory> historyList = listeningHistoryRepository.findByUserIdAndPlayedAtBetween(userId, startDate, endDate);
-
-        return historyList.stream().map(history -> {
-            try {
-                SongDto song = artistServiceClient.getSongById(history.getSongId());
-                return ListeningHistoryResponse.builder()
-                        .id(history.getId())
-                        .songId(history.getSongId())
-                        .songTitle(song.getTitle())
-                        .artistName(song.getArtistName())
-                        .albumTitle(song.getAlbumTitle())
-                        .coverImageUrl(song.getCoverImageUrl())
-                        .playedAt(history.getPlayedAt())
-                        .listenedDuration(history.getDuration())
-                        .build();
-            } catch (Exception e) {
-                return ListeningHistoryResponse.builder()
-                        .id(history.getId())
-                        .songId(history.getSongId())
-                        .songTitle("Unknown")
-                        .artistName("Unknown")
-                        .albumTitle("Unknown")
-                        .coverImageUrl(null)
-                        .playedAt(history.getPlayedAt())
-                        .listenedDuration(history.getDuration())
-                        .build();
-            }
-        }).collect(Collectors.toList());
-    }
-
-    public List<Map<String, Object>> getTopSongsByUser(Long userId, int limit) {
-        Pageable pageable = PageRequest.of(0, limit);
-        List<Object[]> results = listeningHistoryRepository.findTopSongsByUserId(userId, pageable);
-
-        return results.stream().map(result -> {
-            Long songId = (Long) result[0];
-            Long playCount = (Long) result[1];
-
-            Map<String, Object> songStats = new HashMap<>();
-            songStats.put("songId", songId);
-            songStats.put("playCount", playCount);
-
-            try {
-                SongDto song = artistServiceClient.getSongById(songId);
-                songStats.put("title", song.getTitle());
-                songStats.put("artistName", song.getArtistName());
-                songStats.put("albumTitle", song.getAlbumTitle());
-            } catch (Exception e) {
-                songStats.put("title", "Unknown");
-                songStats.put("artistName", "Unknown");
-                songStats.put("albumTitle", "Unknown");
-            }
-
-            return songStats;
-        }).collect(Collectors.toList());
-    }
-
     public List<ListeningHistory> getHistoryBySongId(Long songId) {
         return listeningHistoryRepository.findBySongId(songId);
+    }
+
+    public List<PlayHistoryDto> getPlayHistoryBySongId(Long songId, LocalDateTime startDate, LocalDateTime endDate) {
+        List<ListeningHistory> history = startDate != null && endDate != null
+                ? listeningHistoryRepository.findBySongIdAndPlayedAtBetween(songId, startDate, endDate)
+                : listeningHistoryRepository.findBySongId(songId);
+        return mapPlayHistory(history);
     }
 
     public List<ListeningHistory> getHistoryByUserId(Long userId) {
@@ -168,30 +78,98 @@ public class ListeningHistoryService {
         return listenerCounts;
     }
 
+    public List<ListenerStatsDto> getListenerStatsForArtist(Long artistId) {
+        List<SongDto> songs = artistServiceClient.getArtistSongs(artistId);
+        List<Long> songIds = songs.stream()
+                .map(SongDto::getId)
+                .filter(Objects::nonNull)
+                .toList();
+
+        if (songIds.isEmpty()) {
+            return List.of();
+        }
+
+        List<Object[]> results = listeningHistoryRepository.findTopListenersBySongIds(songIds);
+        List<ListenerStatsDto> listeners = new ArrayList<>();
+
+        for (Object[] result : results) {
+            ListenerStatsDto dto = new ListenerStatsDto();
+            dto.setUserId((Long) result[0]);
+            dto.setPlayCount((Long) result[1]);
+
+            Number totalDuration = (Number) result[2];
+            double totalMinutes = totalDuration == null ? 0.0 : totalDuration.doubleValue() / 60.0;
+            dto.setTotalListeningMinutes(Math.round(totalMinutes * 100.0) / 100.0);
+            listeners.add(dto);
+        }
+
+        return listeners;
+    }
+
+    public List<PlayHistoryDto> getPlayHistoryForArtist(Long artistId, LocalDateTime startDate, LocalDateTime endDate) {
+        List<SongDto> songs = artistServiceClient.getArtistSongs(artistId);
+        List<Long> songIds = songs.stream()
+                .map(SongDto::getId)
+                .filter(Objects::nonNull)
+                .toList();
+
+        if (songIds.isEmpty()) {
+            return List.of();
+        }
+
+        List<ListeningHistory> history = startDate != null && endDate != null
+                ? listeningHistoryRepository.findBySongIdInAndPlayedAtBetween(songIds, startDate, endDate)
+                : listeningHistoryRepository.findBySongIdIn(songIds);
+
+        return mapPlayHistory(history);
+    }
+
     public List<Map<String, Object>> getDailyTrends(LocalDateTime startDate, LocalDateTime endDate) {
         List<Object[]> results = listeningHistoryRepository.findDailyPlayCounts(startDate, endDate);
 
-        return results.stream().map(result -> {
+        List<Map<String, Object>> trends = new ArrayList<>();
+        for (Object[] result : results) {
             Map<String, Object> trend = new HashMap<>();
             trend.put("date", result[0]);
             trend.put("playCount", result[1]);
-            return trend;
-        }).collect(Collectors.toList());
+            trends.add(trend);
+        }
+        return trends;
     }
 
-    private Page<ListeningHistoryResponse> getRecentHistoryFallback(Long userId, int page, int size, Exception e) {
-        Pageable pageable = PageRequest.of(page, size);
-        Page<ListeningHistory> historyPage = listeningHistoryRepository.findByUserIdOrderByPlayedAtDesc(userId, pageable);
+    private List<PlayHistoryDto> mapPlayHistory(List<ListeningHistory> history) {
+        return history.stream()
+                .map(this::toPlayHistoryDto)
+                .toList();
+    }
 
-        return historyPage.map(history -> ListeningHistoryResponse.builder()
-                .id(history.getId())
-                .songId(history.getSongId())
-                .songTitle("Unknown")
-                .artistName("Unknown")
-                .albumTitle("Unknown")
-                .coverImageUrl(null)
-                .playedAt(history.getPlayedAt())
-                .listenedDuration(history.getDuration())
-                .build());
+    private PlayHistoryDto toPlayHistoryDto(ListeningHistory history) {
+        PlayHistoryDto dto = new PlayHistoryDto();
+        dto.setId(history.getId());
+        dto.setUserId(history.getUserId());
+        dto.setSongId(history.getSongId());
+        dto.setPlayedAt(history.getPlayedAt());
+        dto.setListenDurationSeconds(history.getDuration());
+        dto.setCompleted(Boolean.TRUE);
+        return dto;
+    }
+
+    private String defaultValue(String primary, String fallback, String finalFallback) {
+        String normalizedPrimary = normalize(primary);
+        if (normalizedPrimary != null) {
+            return normalizedPrimary;
+        }
+
+        String normalizedFallback = normalize(fallback);
+        return normalizedFallback != null ? normalizedFallback : finalFallback;
+    }
+
+    private String normalize(String value) {
+        if (value == null) {
+            return null;
+        }
+
+        String trimmed = value.trim();
+        return trimmed.isEmpty() ? null : trimmed;
     }
 }

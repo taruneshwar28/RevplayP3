@@ -6,7 +6,6 @@ import com.revplay.music.dto.PageResponse;
 import com.revplay.music.dto.SongCatalogResponse;
 import com.revplay.music.exception.ServiceUnavailableException;
 import feign.FeignException;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -23,7 +22,6 @@ public class CatalogService {
         this.artistServiceClient = artistServiceClient;
     }
 
-    @Cacheable(value = "songs", key = "#page + '-' + #size")
     public PageResponse<SongCatalogResponse> getPublicSongs(int page, int size) {
         try {
             return artistServiceClient.getPublicSongs(page, size);
@@ -32,7 +30,6 @@ public class CatalogService {
         }
     }
 
-    @Cacheable(value = "songs", key = "#songId")
     public SongCatalogResponse getSongById(Long songId) {
         try {
             return artistServiceClient.getSongById(songId);
@@ -45,7 +42,6 @@ public class CatalogService {
 
     public PageResponse<SongCatalogResponse> getSongsByGenre(String genre, int page, int size) {
         try {
-            // Fetch all public songs and filter by genre
             PageResponse<SongCatalogResponse> allSongs = artistServiceClient.getPublicSongs(page, size);
 
             List<SongCatalogResponse> filteredSongs = allSongs.getContent().stream()
@@ -65,10 +61,8 @@ public class CatalogService {
         }
     }
 
-    @Cacheable(value = "genres")
     public List<GenreResponse> getGenres() {
         try {
-            // Fetch all songs and extract unique genres
             PageResponse<SongCatalogResponse> allSongs = artistServiceClient.getPublicSongs(0, 1000);
 
             Map<String, Long> genreCounts = allSongs.getContent().stream()
@@ -79,12 +73,10 @@ public class CatalogService {
                     ));
 
             List<GenreResponse> genres = new ArrayList<>();
-            genreCounts.forEach((genre, count) -> {
-                genres.add(GenreResponse.builder()
-                        .name(genre)
-                        .songCount(count)
-                        .build());
-            });
+            genreCounts.forEach((genre, count) -> genres.add(GenreResponse.builder()
+                    .name(genre)
+                    .songCount(count)
+                    .build()));
 
             return genres;
         } catch (FeignException e) {

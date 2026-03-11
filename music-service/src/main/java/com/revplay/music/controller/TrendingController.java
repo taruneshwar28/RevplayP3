@@ -18,7 +18,6 @@ public class TrendingController {
     @GetMapping("/trending")
     public ResponseEntity<TrendingResponse> getTrendingSongs(
             @RequestParam(defaultValue = "20") int limit) {
-        // Default to WEEKLY if not specified
         TrendingResponse trending = trendingService.getTrendingSongs(
                 TrendingResponse.TrendingPeriod.WEEKLY, limit);
         return ResponseEntity.ok(trending);
@@ -32,7 +31,6 @@ public class TrendingController {
         try {
             trendingPeriod = TrendingResponse.TrendingPeriod.valueOf(period.toUpperCase());
         } catch (IllegalArgumentException e) {
-            // Default to WEEKLY if invalid period
             trendingPeriod = TrendingResponse.TrendingPeriod.WEEKLY;
         }
 

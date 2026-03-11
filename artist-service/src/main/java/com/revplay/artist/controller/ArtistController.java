@@ -2,20 +2,26 @@ package com.revplay.artist.controller;
 
 import com.revplay.artist.dto.ArtistProfileRequest;
 import com.revplay.artist.dto.ArtistProfileResponse;
+import com.revplay.artist.dto.SongResponse;
 import com.revplay.artist.service.ArtistService;
+import com.revplay.artist.service.SongService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/artists")
 public class ArtistController {
 
     private final ArtistService artistService;
+    private final SongService songService;
 
-    public ArtistController(ArtistService artistService) {
+    public ArtistController(ArtistService artistService, SongService songService) {
         this.artistService = artistService;
+        this.songService = songService;
     }
 
     @GetMapping("/profile")
@@ -53,5 +59,11 @@ public class ArtistController {
             @PathVariable Long artistId) {
         ArtistProfileResponse response = artistService.getArtistById(artistId);
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/{artistId}/songs")
+    public ResponseEntity<List<SongResponse>> getSongsByArtistId(@PathVariable Long artistId) {
+        List<SongResponse> songs = songService.getSongsByArtistId(artistId);
+        return ResponseEntity.ok(songs);
     }
 }

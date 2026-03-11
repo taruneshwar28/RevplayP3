@@ -1,4 +1,4 @@
-import { Component, ElementRef, HostListener } from '@angular/core';
+import { Component } from '@angular/core';
 import { NavigationEnd, Router } from '@angular/router';
 import { AuthService } from './core/services/auth.service';
 import { filter } from 'rxjs';
@@ -14,14 +14,12 @@ export class AppComponent {
   artistFilter = '';
   albumFilter = '';
   genreFilter = '';
-  releaseDateFilter = '';
-  sortBy = '';
-  searchExpanded = false;
+  dateFilter = '';
+  sortOption = 'none';
 
   constructor(
     public authService: AuthService,
     public router: Router,
-    private elementRef: ElementRef,
   ) {
     this.syncSearchFromUrl();
     this.router.events
@@ -30,71 +28,31 @@ export class AppComponent {
   }
 
   onSearchFocus(): void {
-    this.searchExpanded = true;
-  }
-
-  applySearchOptions(): void {
-    this.onSearch();
-  }
-
-  @HostListener('document:click', ['$event'])
-  handleDocumentClick(event: MouseEvent): void {
-    const target = event.target as Node;
-    const clickedInside = this.elementRef.nativeElement
-      .querySelector('.nav-search-wrap')
-      ?.contains(target);
-
-    if (clickedInside) {
-      return;
-    }
-
-    if (!this.searchTerm.trim() && !this.artistFilter.trim() && !this.albumFilter.trim() && !this.genreFilter.trim() && !this.releaseDateFilter.trim() && !this.sortBy) {
-      this.searchExpanded = false;
+    if (!this.router.url.startsWith('/browse')) {
+      this.router.navigate(['/browse'], {
+        queryParams: {
+          q: this.searchTerm.trim() || undefined,
+        },
+      });
     }
   }
 
   onSearch(): void {
-    const q = this.searchTerm.trim();
-    const artist = this.artistFilter.trim();
-    const album = this.albumFilter.trim();
-    const genre = this.genreFilter.trim();
-    const releaseDate = this.releaseDateFilter.trim();
-    const sort = this.sortBy.trim();
-    const queryParams: { q?: string; artist?: string; album?: string; genre?: string; releaseDate?: string; sort?: string } = {};
-
-    if (q) {
-      queryParams.q = q;
-    }
-    if (artist) {
-      queryParams.artist = artist;
-    }
-    if (album) {
-      queryParams.album = album;
-    }
-    if (genre) {
-      queryParams.genre = genre;
-    }
-    if (releaseDate) {
-      queryParams.releaseDate = releaseDate;
-    }
-    if (sort) {
-      queryParams.sort = sort;
-    }
-
-    this.router.navigate(['/browse'], {
-      queryParams,
-    });
+    this.navigateToBrowseWithFilters(1);
   }
 
-  clearSearchOptions(): void {
+  applyFilters(): void {
+    this.navigateToBrowseWithFilters(1);
+  }
+
+  clearFilters(): void {
     this.searchTerm = '';
     this.artistFilter = '';
     this.albumFilter = '';
     this.genreFilter = '';
-    this.releaseDateFilter = '';
-    this.sortBy = '';
-    this.searchExpanded = false;
-    this.router.navigate(['/browse']);
+    this.dateFilter = '';
+    this.sortOption = 'none';
+    this.navigateToBrowseWithFilters(1);
   }
 
   private syncSearchFromUrl(): void {
@@ -103,26 +61,40 @@ export class AppComponent {
       this.artistFilter = '';
       this.albumFilter = '';
       this.genreFilter = '';
-      this.releaseDateFilter = '';
-      this.sortBy = '';
-      this.searchExpanded = false;
+      this.dateFilter = '';
+      this.sortOption = 'none';
       return;
     }
 
     const parsedUrl = this.router.parseUrl(this.router.url);
-    const q = parsedUrl.queryParams['q'];
-    const artist = parsedUrl.queryParams['artist'];
-    const album = parsedUrl.queryParams['album'];
-    const genre = parsedUrl.queryParams['genre'];
-    const releaseDate = parsedUrl.queryParams['releaseDate'];
-    const sort = parsedUrl.queryParams['sort'];
+    const { q, artist, album, genre, date, sort } = parsedUrl.queryParams;
 
     this.searchTerm = typeof q === 'string' ? q : '';
     this.artistFilter = typeof artist === 'string' ? artist : '';
     this.albumFilter = typeof album === 'string' ? album : '';
     this.genreFilter = typeof genre === 'string' ? genre : '';
-    this.releaseDateFilter = typeof releaseDate === 'string' ? releaseDate : '';
-    this.sortBy = typeof sort === 'string' ? sort : '';
-    this.searchExpanded = !!(this.searchTerm || this.artistFilter || this.albumFilter || this.genreFilter || this.releaseDateFilter || this.sortBy);
+    this.dateFilter = typeof date === 'string' ? date : '';
+    this.sortOption = typeof sort === 'string' && sort ? sort : 'none';
+  }
+
+  private navigateToBrowseWithFilters(page: number): void {
+    const q = this.searchTerm.trim();
+    const artist = this.artistFilter.trim();
+    const album = this.albumFilter.trim();
+    const genre = this.genreFilter.trim();
+    const date = this.dateFilter;
+    const sort = this.sortOption !== 'none' ? this.sortOption : undefined;
+
+    this.router.navigate(['/browse'], {
+      queryParams: {
+        q: q || undefined,
+        artist: artist || undefined,
+        album: album || undefined,
+        genre: genre || undefined,
+        date: date || undefined,
+        sort,
+        page,
+      },
+    });
   }
 }

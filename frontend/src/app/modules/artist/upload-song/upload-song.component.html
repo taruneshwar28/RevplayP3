@@ -23,27 +23,17 @@
       </div>
 
       <div class="ui-field">
-        <label>Audio File URL</label>
-        <input type="text" formControlName="fileUrl" placeholder="https://..." />
-      </div>
-
-      <div class="ui-field">
-        <label>Cover Image URL</label>
-        <input type="text" formControlName="coverImageUrl" placeholder="https://..." />
-      </div>
-
-      <div class="ui-field">
-        <label>Album ID (optional)</label>
-        <input type="number" formControlName="albumId" />
-      </div>
-
-      <div class="ui-field">
         <label>Visibility</label>
         <select formControlName="visibility">
           <option value="PUBLIC">Public</option>
-          <option value="PRIVATE">Private</option>
           <option value="UNLISTED">Unlisted</option>
         </select>
+      </div>
+
+      <div class="ui-field">
+        <label>Audio File</label>
+        <input #audioFileInput type="file" accept="audio/*" (change)="onAudioFileSelected($event)" />
+        <small *ngIf="selectedAudioName" class="selected-file">Selected: {{ selectedAudioName }}</small>
       </div>
 
       <div class="ui-actions">

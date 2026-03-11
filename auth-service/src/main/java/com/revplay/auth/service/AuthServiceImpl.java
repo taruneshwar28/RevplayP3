@@ -56,6 +56,8 @@ public class AuthServiceImpl implements AuthService {
                 .tokenType("Bearer")
                 .userId(savedUser.getId())
                 .email(savedUser.getEmail())
+                .firstName(savedUser.getFirstName())
+                .lastName(savedUser.getLastName())
                 .role(savedUser.getRole())
                 .build();
     }
@@ -81,6 +83,8 @@ public class AuthServiceImpl implements AuthService {
                 .tokenType("Bearer")
                 .userId(user.getId())
                 .email(user.getEmail())
+                .firstName(user.getFirstName())
+                .lastName(user.getLastName())
                 .role(user.getRole())
                 .build();
     }

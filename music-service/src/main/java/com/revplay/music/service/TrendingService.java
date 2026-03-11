@@ -25,12 +25,8 @@ public class TrendingService {
     @Cacheable(value = "trending", key = "#period + '-' + #limit")
     public TrendingResponse getTrendingSongs(TrendingResponse.TrendingPeriod period, int limit) {
         try {
-            // Fetch all public songs
             PageResponse<SongCatalogResponse> allSongs = artistServiceClient.getPublicSongs(0, 1000);
 
-            // Sort by play count and limit
-            // NOTE: In future, this would integrate with analytics-service to get actual trending data
-            // based on the period (daily, weekly, monthly). For now, we use play count.
             List<SongCatalogResponse> trendingSongs = allSongs.getContent().stream()
                     .sorted(Comparator.comparing(
                             song -> song.getPlayCount() != null ? song.getPlayCount() : 0L,

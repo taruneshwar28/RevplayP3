@@ -25,7 +25,7 @@ export interface PlaylistResponse {
   id: number;
   name: string;
   description?: string;
-  isPublic: boolean;
+  isPublic?: boolean;
   songCount: number;
   songs: PlaylistSong[];
   createdAt: string;

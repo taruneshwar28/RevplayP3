@@ -51,6 +51,11 @@ public class ArtistService {
                 .userId(userId)
                 .stageName(request.getStageName())
                 .bio(request.getBio())
+                .genre(request.getGenre())
+                .instagramUrl(request.getInstagramUrl())
+                .twitterUrl(request.getTwitterUrl())
+                .youtubeUrl(request.getYoutubeUrl())
+                .websiteUrl(request.getWebsiteUrl())
                 .profileImageUrl(request.getProfileImageUrl())
                 .verified(false)
                 .build();
@@ -69,6 +74,21 @@ public class ArtistService {
         }
         if (request.getBio() != null) {
             artist.setBio(request.getBio());
+        }
+        if (request.getGenre() != null) {
+            artist.setGenre(request.getGenre());
+        }
+        if (request.getInstagramUrl() != null) {
+            artist.setInstagramUrl(request.getInstagramUrl());
+        }
+        if (request.getTwitterUrl() != null) {
+            artist.setTwitterUrl(request.getTwitterUrl());
+        }
+        if (request.getYoutubeUrl() != null) {
+            artist.setYoutubeUrl(request.getYoutubeUrl());
+        }
+        if (request.getWebsiteUrl() != null) {
+            artist.setWebsiteUrl(request.getWebsiteUrl());
         }
         if (request.getProfileImageUrl() != null) {
             artist.setProfileImageUrl(request.getProfileImageUrl());
@@ -98,6 +118,11 @@ public class ArtistService {
                 .userId(artist.getUserId())
                 .stageName(artist.getStageName())
                 .bio(artist.getBio())
+                .genre(artist.getGenre())
+                .instagramUrl(artist.getInstagramUrl())
+                .twitterUrl(artist.getTwitterUrl())
+                .youtubeUrl(artist.getYoutubeUrl())
+                .websiteUrl(artist.getWebsiteUrl())
                 .profileImageUrl(artist.getProfileImageUrl())
                 .verified(artist.getVerified())
                 .songCount(songCount)

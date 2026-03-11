@@ -9,6 +9,7 @@ public class SongCatalogResponse {
     private String albumTitle;
     private Integer duration;
     private String genre;
+    private String fileUrl;
     private String coverImageUrl;
     private Long playCount;
 
@@ -24,6 +25,7 @@ public class SongCatalogResponse {
         this.albumTitle = builder.albumTitle;
         this.duration = builder.duration;
         this.genre = builder.genre;
+        this.fileUrl = builder.fileUrl;
         this.coverImageUrl = builder.coverImageUrl;
         this.playCount = builder.playCount;
     }
@@ -41,6 +43,7 @@ public class SongCatalogResponse {
         private String albumTitle;
         private Integer duration;
         private String genre;
+        private String fileUrl;
         private String coverImageUrl;
         private Long playCount;
 
@@ -81,6 +84,11 @@ public class SongCatalogResponse {
 
         public Builder genre(String genre) {
             this.genre = genre;
+            return this;
+        }
+
+        public Builder fileUrl(String fileUrl) {
+            this.fileUrl = fileUrl;
             return this;
         }
 
@@ -162,6 +170,14 @@ public class SongCatalogResponse {
 
     public void setGenre(String genre) {
         this.genre = genre;
+    }
+
+    public String getFileUrl() {
+        return fileUrl;
+    }
+
+    public void setFileUrl(String fileUrl) {
+        this.fileUrl = fileUrl;
     }
 
     public String getCoverImageUrl() {

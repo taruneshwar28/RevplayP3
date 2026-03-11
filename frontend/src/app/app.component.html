@@ -2,7 +2,7 @@
   <header class="top-nav" *ngIf="authService.isLoggedIn() && !router.url.startsWith('/home')">
     <div class="nav-left">
       <div class="brand">RevPlay</div>
-      <div class="nav-search-wrap" *ngIf="authService.getUserRole() === 'USER'" [class.expanded]="searchExpanded">
+      <div class="nav-search-wrap" *ngIf="authService.getUserRole() === 'USER'">
         <form class="nav-search" (ngSubmit)="onSearch()">
           <input
             type="text"
@@ -12,8 +12,7 @@
             (focus)="onSearchFocus()"
           />
         </form>
-
-        <div class="search-tools" *ngIf="searchExpanded">
+        <div class="nav-filters">
           <input
             type="text"
             name="artistFilter"
@@ -34,19 +33,20 @@
           />
           <input
             type="date"
-            name="releaseDateFilter"
-            [(ngModel)]="releaseDateFilter"
+            name="dateFilter"
+            [(ngModel)]="dateFilter"
           />
-          <select name="sortBy" [(ngModel)]="sortBy">
-            <option value="">Sort: none</option>
-            <option value="releaseDateDesc">Release Date (Newest)</option>
-            <option value="releaseDateAsc">Release Date (Oldest)</option>
+          <select name="sortOption" [(ngModel)]="sortOption">
+            <option value="none">Sort: none</option>
+            <option value="titleAsc">Title A-Z</option>
+            <option value="titleDesc">Title Z-A</option>
             <option value="artistAsc">Artist A-Z</option>
-            <option value="albumAsc">Album A-Z</option>
-            <option value="genreAsc">Genre A-Z</option>
+            <option value="playsDesc">Most played</option>
+            <option value="newest">Newest</option>
+            <option value="oldest">Oldest</option>
           </select>
-          <button type="button" (click)="applySearchOptions()">Apply</button>
-          <button type="button" (click)="clearSearchOptions()">Clear</button>
+          <button type="button" (click)="applyFilters()">Apply</button>
+          <button type="button" class="nav-clear-btn" (click)="clearFilters()">Clear</button>
         </div>
       </div>
     </div>

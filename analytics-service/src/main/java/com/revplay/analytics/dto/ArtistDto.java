@@ -2,6 +2,7 @@ package com.revplay.analytics.dto;
 
 public class ArtistDto {
     private Long id;
+    private Long userId;
     private String stageName;
     private String profileImageUrl;
 
@@ -28,6 +29,14 @@ public class ArtistDto {
 
     public String getStageName() {
         return stageName;
+    }
+
+    public Long getUserId() {
+        return userId;
+    }
+
+    public void setUserId(Long userId) {
+        this.userId = userId;
     }
 
     public void setStageName(String stageName) {

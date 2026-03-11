@@ -5,6 +5,7 @@ import com.revplay.analytics.dto.SongDto;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
 
@@ -19,4 +20,7 @@ public interface ArtistServiceClient {
 
     @GetMapping("/api/internal/songs/{songId}")
     SongDto getSong(@PathVariable Long songId);
+
+    @GetMapping("/api/internal/artists/by-user")
+    ArtistDto getArtistByUserId(@RequestParam Long userId);
 }

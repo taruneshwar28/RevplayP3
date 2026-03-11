@@ -1,7 +1,7 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { Song, SongService } from 'src/app/core/service/song.service';
-import { ListeningHistoryService, NowPlayingResponse } from 'src/app/core/service/listening-history.service';
+import { ListeningHistoryService } from 'src/app/core/service/listening-history.service';
 
 @Component({
   selector: 'app-music-player',
@@ -16,7 +16,6 @@ export class MusicPlayerComponent implements OnInit, OnDestroy {
   duration = 0;
   volume = 1;
   loadError = '';
-  nowPlaying: NowPlayingResponse | null = null;
 
   private readonly audio = new Audio();
   private hasRecordedCurrentSong = false;
@@ -47,17 +46,12 @@ export class MusicPlayerComponent implements OnInit, OnDestroy {
     this.audio.addEventListener('loadedmetadata', this.onLoadedMetadata);
     this.audio.addEventListener('ended', this.onEnded);
 
-    this.listeningHistoryService.getNowPlaying().subscribe({
-      next: (data) => (this.nowPlaying = data),
-      error: () => {
-        this.nowPlaying = null;
-      },
-    });
-
     this.songService.getAllSongs().subscribe({
       next: (songs) => {
         this.songs = songs;
+        this.loadError = '';
         if (this.songs.length === 0) {
+          this.loadError = 'No songs to play yet.';
           return;
         }
 
@@ -73,7 +67,7 @@ export class MusicPlayerComponent implements OnInit, OnDestroy {
       },
       error: () => {
         this.songs = [];
-        this.loadError = 'Unable to load songs. Please try again.';
+        this.loadError = 'No songs to play yet.';
       },
     });
   }

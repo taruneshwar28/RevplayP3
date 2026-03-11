@@ -1,18 +1,45 @@
 <section class="ui-page">
   <div class="ui-card artist-profile-card">
     <h2 class="ui-title">Artist Profile</h2>
-    <p class="ui-subtitle">Manage your artist profile details.</p>
+    <p class="ui-subtitle">Keep your artist details up to date.</p>
 
     <p *ngIf="errorMessage" class="ui-message ui-message-error">{{ errorMessage }}</p>
+    <p *ngIf="successMessage" class="ui-message ui-message-success">{{ successMessage }}</p>
 
     <div *ngIf="profile && !isEditMode && !creating">
-      <div class="info-grid">
-        <p><strong>Stage Name:</strong> {{ profile.stageName }}</p>
-        <p><strong>Verified:</strong> {{ profile.verified ? 'Yes' : 'No' }}</p>
-        <p><strong>Songs:</strong> {{ profile.songCount }}</p>
-        <p><strong>Albums:</strong> {{ profile.albumCount }}</p>
-        <p><strong>Total Plays:</strong> {{ profile.totalPlays }}</p>
-        <p class="info-full"><strong>Bio:</strong> {{ profile.bio || '-' }}</p>
+      <div class="profile-grid">
+        <button type="button" class="profile-field" (click)="enableEdit()">
+          <span class="field-label">Name:</span>
+          <span class="field-value">{{ profile.stageName || '-' }}</span>
+        </button>
+        <button type="button" class="profile-field" (click)="enableEdit()">
+          <span class="field-label">Genre:</span>
+          <span class="field-value">{{ profile.genre || '-' }}</span>
+        </button>
+        <button type="button" class="profile-field profile-field-wide" (click)="enableEdit()">
+          <span class="field-label">Bio:</span>
+          <span class="field-value">{{ profile.bio || '-' }}</span>
+        </button>
+      </div>
+
+      <h3 class="section-title">Social Links</h3>
+      <div class="profile-grid social-grid">
+        <button type="button" class="profile-field" (click)="openLink(profile.instagramUrl)">
+          <span class="field-label">Instagram:</span>
+          <span class="field-value" [class.field-value-empty]="!profile.instagramUrl">{{ profile.instagramUrl || '-' }}</span>
+        </button>
+        <button type="button" class="profile-field" (click)="openLink(profile.twitterUrl)">
+          <span class="field-label">Twitter:</span>
+          <span class="field-value" [class.field-value-empty]="!profile.twitterUrl">{{ profile.twitterUrl || '-' }}</span>
+        </button>
+        <button type="button" class="profile-field" (click)="openLink(profile.youtubeUrl)">
+          <span class="field-label">YouTube:</span>
+          <span class="field-value" [class.field-value-empty]="!profile.youtubeUrl">{{ profile.youtubeUrl || '-' }}</span>
+        </button>
+        <button type="button" class="profile-field" (click)="openLink(profile.websiteUrl)">
+          <span class="field-label">Website:</span>
+          <span class="field-value" [class.field-value-empty]="!profile.websiteUrl">{{ profile.websiteUrl || '-' }}</span>
+        </button>
       </div>
 
       <div class="ui-actions">
@@ -23,23 +50,48 @@
 
     <div *ngIf="creating || isEditMode || !profile">
       <form class="ui-form" (ngSubmit)="saveProfile()">
-        <div class="ui-field">
-          <label>Stage Name</label>
-          <input type="text" [(ngModel)]="form.stageName" name="stageName" />
+        <div class="profile-grid form-grid">
+          <label class="profile-field profile-input">
+            <span class="field-label">Name:</span>
+            <input type="text" [(ngModel)]="form.stageName" name="stageName" />
+          </label>
+
+          <label class="profile-field profile-input">
+            <span class="field-label">Genre:</span>
+            <input type="text" [(ngModel)]="form.genre" name="genre" />
+          </label>
+
+          <label class="profile-field profile-field-wide profile-input">
+            <span class="field-label">Bio:</span>
+            <textarea [(ngModel)]="form.bio" name="bio" rows="3"></textarea>
+          </label>
         </div>
 
-        <div class="ui-field">
-          <label>Bio</label>
-          <textarea [(ngModel)]="form.bio" name="bio"></textarea>
-        </div>
+        <h3 class="section-title">Social Links</h3>
+        <div class="profile-grid form-grid social-grid">
+          <label class="profile-field profile-input">
+            <span class="field-label">Instagram:</span>
+            <input type="text" [(ngModel)]="form.instagramUrl" name="instagramUrl" />
+          </label>
 
-        <div class="ui-field">
-          <label>Profile Image URL</label>
-          <input type="text" [(ngModel)]="form.profileImageUrl" name="profileImageUrl" />
+          <label class="profile-field profile-input">
+            <span class="field-label">Twitter:</span>
+            <input type="text" [(ngModel)]="form.twitterUrl" name="twitterUrl" />
+          </label>
+
+          <label class="profile-field profile-input">
+            <span class="field-label">YouTube:</span>
+            <input type="text" [(ngModel)]="form.youtubeUrl" name="youtubeUrl" />
+          </label>
+
+          <label class="profile-field profile-input">
+            <span class="field-label">Website:</span>
+            <input type="text" [(ngModel)]="form.websiteUrl" name="websiteUrl" />
+          </label>
         </div>
 
         <div class="ui-actions">
-          <button type="submit">{{ creating ? 'Create' : 'Update' }}</button>
+          <button type="submit">Save Profile</button>
           <button type="button" class="ui-btn-secondary" *ngIf="isEditMode" (click)="cancelEdit()">Cancel</button>
           <button type="button" class="ui-btn-secondary" (click)="logout()">Logout</button>
         </div>
@@ -47,6 +99,6 @@
     </div>
 
     <hr />
-    <a class="ui-link" routerLink="/artist/dashboard">Back to Dashboard</a>
+    <button type="button" class="back-link-button" routerLink="/artist/dashboard">Back to Dashboard</button>
   </div>
 </section>

@@ -4,7 +4,6 @@ public class UserStatsResponse {
 
     private Long playlistCount;
     private Long favoriteCount;
-    private Long totalListeningTime;
 
     public UserStatsResponse() {
     }
@@ -18,10 +17,6 @@ public class UserStatsResponse {
         return favoriteCount;
     }
 
-    public Long getTotalListeningTime() {
-        return totalListeningTime;
-    }
-
     // Setters
     public void setPlaylistCount(Long playlistCount) {
         this.playlistCount = playlistCount;
@@ -29,10 +24,6 @@ public class UserStatsResponse {
 
     public void setFavoriteCount(Long favoriteCount) {
         this.favoriteCount = favoriteCount;
-    }
-
-    public void setTotalListeningTime(Long totalListeningTime) {
-        this.totalListeningTime = totalListeningTime;
     }
 
     // Builder
@@ -54,11 +45,6 @@ public class UserStatsResponse {
 
         public Builder favoriteCount(Long favoriteCount) {
             response.favoriteCount = favoriteCount;
-            return this;
-        }
-
-        public Builder totalListeningTime(Long totalListeningTime) {
-            response.totalListeningTime = totalListeningTime;
             return this;
         }
 

@@ -16,20 +16,22 @@ import {
 })
 export class ProfileComponent implements OnInit {
   profile: UserProfileResponse | null = null;
+  email = '';
+  private readonly registeredFirstName = (localStorage.getItem('firstName') ?? '').trim();
   form: UserProfileRequest = {
     username: '',
+    displayName: '',
     bio: '',
-    profileImageUrl: '',
   };
 
   stats: UserStatsResponse = {
     playlistCount: 0,
     favoriteCount: 0,
-    totalListeningTime: 0,
   };
 
   loading = false;
   creating = false;
+  editing = false;
   errorMessage = '';
 
   constructor(
@@ -39,6 +41,8 @@ export class ProfileComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    this.email = localStorage.getItem('userEmail') ?? '';
+    this.applyRegisterDefaults();
     this.loadProfile();
     this.loadStats();
   }
@@ -49,15 +53,18 @@ export class ProfileComponent implements OnInit {
       next: (res) => {
         this.profile = res;
         this.form = {
-          username: res.username,
+          username: this.valueOrFallback(res.username, this.registeredFirstName),
+          displayName: this.valueOrFallback(res.displayName, this.registeredFirstName),
           bio: res.bio ?? '',
-          profileImageUrl: res.profileImageUrl ?? '',
         };
         this.creating = false;
+        this.editing = false;
       },
       error: (err: HttpErrorResponse) => {
         if (err.status === 404) {
           this.creating = true;
+          this.editing = true;
+          this.applyRegisterDefaults();
           return;
         }
         this.errorMessage = 'Failed to load profile';
@@ -74,7 +81,6 @@ export class ProfileComponent implements OnInit {
         this.stats = {
           playlistCount: 0,
           favoriteCount: 0,
-          totalListeningTime: 0,
         };
       },
     });
@@ -90,8 +96,8 @@ export class ProfileComponent implements OnInit {
 
     const payload: UserProfileRequest = {
       username: this.form.username.trim(),
+      displayName: this.form.displayName?.trim() ?? '',
       bio: this.form.bio?.trim() ?? '',
-      profileImageUrl: this.form.profileImageUrl?.trim() ?? '',
     };
 
     const request$ = this.creating
@@ -102,6 +108,7 @@ export class ProfileComponent implements OnInit {
       next: (res) => {
         this.profile = res;
         this.creating = false;
+        this.editing = false;
         this.loading = false;
         this.loadStats();
       },
@@ -112,40 +119,47 @@ export class ProfileComponent implements OnInit {
     });
   }
 
-  validateToken(): void {
-    const token = this.authService.getToken();
-    if (!token) {
-      this.errorMessage = 'Missing access token';
+  onPrimaryAction(): void {
+    if (this.loading) {
       return;
     }
 
-    this.authService.validateToken(token).subscribe({
-      next: (res) => {
-        this.errorMessage = res.valid ? 'Token is valid' : 'Token is invalid';
-      },
-      error: () => {
-        this.errorMessage = 'Token validation failed';
-      },
-    });
+    if (this.creating || this.editing) {
+      this.save();
+      return;
+    }
+
+    this.editing = true;
+    this.errorMessage = '';
   }
 
-  refreshToken(): void {
-    const refreshToken = this.authService.getRefreshToken();
-    if (!refreshToken) {
-      this.errorMessage = 'Missing refresh token';
-      return;
+  get primaryButtonLabel(): string {
+    if (this.loading) {
+      return 'Saving...';
     }
 
-    this.authService.refreshToken(refreshToken).subscribe({
-      next: (res) => {
-        this.authService.saveAccessToken(res.accessToken);
-        localStorage.setItem('refreshToken', res.refreshToken);
-        this.errorMessage = 'Token refreshed';
-      },
-      error: () => {
-        this.errorMessage = 'Token refresh failed';
-      },
-    });
+    if (this.creating || this.editing) {
+      return 'Save';
+    }
+
+    return 'Update';
+  }
+
+  get isEditMode(): boolean {
+    return this.creating || this.editing;
+  }
+
+  private applyRegisterDefaults(): void {
+    this.form = {
+      username: this.valueOrFallback(this.form.username, this.registeredFirstName),
+      displayName: this.valueOrFallback(this.form.displayName, this.registeredFirstName),
+      bio: this.form.bio ?? '',
+    };
+  }
+
+  private valueOrFallback(value?: string, fallback = ''): string {
+    const trimmed = value?.trim() ?? '';
+    return trimmed || fallback;
   }
 
   logout(): void {

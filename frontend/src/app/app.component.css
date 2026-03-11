@@ -26,7 +26,7 @@
 
 .nav-left {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 16px;
   min-width: 0;
 }
@@ -35,7 +35,9 @@
   width: 100%;
 }
 
-.nav-search input {
+.nav-search input,
+.nav-filters input,
+.nav-filters select {
   width: 100%;
   background: rgba(15, 23, 42, 0.95);
   border: 1px solid rgba(148, 163, 184, 0.35);
@@ -45,56 +47,44 @@
   outline: none;
 }
 
-.nav-search input::placeholder {
+.nav-search input::placeholder,
+.nav-filters input::placeholder {
   color: #94a3b8;
 }
 
-.nav-search input:focus {
+.nav-search input:focus,
+.nav-filters input:focus,
+.nav-filters select:focus {
   border-color: rgba(96, 165, 250, 0.9);
 }
 
 .nav-search-wrap {
-  width: min(260px, 34vw);
-  transition: width 180ms ease;
-}
-
-.nav-search-wrap.expanded {
   width: min(760px, 70vw);
 }
 
-.search-tools {
-  margin-top: 8px;
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
+.nav-filters {
+  margin-top: 12px;
+  display: grid;
+  grid-template-columns: 1.1fr 1.1fr 1fr 160px 180px auto auto;
+  gap: 10px;
 }
 
-.search-tools input,
-.search-tools select {
-  background: rgba(15, 23, 42, 0.95);
-  border: 1px solid rgba(148, 163, 184, 0.35);
-  color: #e2e8f0;
+.nav-filters button {
+  border: 1px solid rgba(96, 165, 250, 0.45);
+  background: rgba(37, 99, 235, 0.88);
+  color: #f8fafc;
   border-radius: 10px;
-  padding: 7px 10px;
-  outline: none;
-}
-
-.search-tools input {
-  flex: 1;
-  min-width: 0;
-}
-
-.search-tools select {
-  width: 210px;
-}
-
-.search-tools button {
-  border: 1px solid rgba(59, 130, 246, 0.45);
-  background: rgba(59, 130, 246, 0.18);
-  color: #dbeafe;
-  border-radius: 10px;
-  padding: 7px 12px;
+  padding: 8px 14px;
   cursor: pointer;
+}
+
+.nav-filters button:hover {
+  background: rgba(29, 78, 216, 0.92);
+}
+
+.nav-clear-btn {
+  background: rgba(20, 32, 64, 0.88) !important;
+  border-color: rgba(148, 163, 184, 0.35) !important;
 }
 
 .nav-links {
@@ -140,7 +130,7 @@
     width: min(520px, 68vw);
   }
 
-  .nav-search-wrap.expanded {
-    width: min(520px, 68vw);
+  .nav-filters {
+    grid-template-columns: 1fr 1fr;
   }
 }

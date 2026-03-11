@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
+import { ArtistProfileResponse } from '../../core/services/artist.service';
 import { SongService } from '../../services/song.service';
 
 @Component({
@@ -8,7 +9,7 @@ import { SongService } from '../../services/song.service';
   styleUrls: ['./artist-profile.component.css']
 })
 export class ArtistProfileComponent implements OnInit {
-  artist: any;
+  artist: ArtistProfileResponse | null = null;
 
   constructor(
     private route: ActivatedRoute,

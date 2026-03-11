@@ -1,5 +1,7 @@
 package com.revplay.analytics.config;
 
+import com.revplay.analytics.client.ArtistServiceClient;
+import com.revplay.analytics.dto.ArtistDto;
 import com.revplay.analytics.exception.UnauthorizedException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -51,7 +53,11 @@ public class SecurityConfig {
         }
     }
 
-    public static void validateArtistAccess(Long requestingUserId, String userRole, Long artistId) {
+    public static void validateArtistAccess(
+            Long requestingUserId,
+            String userRole,
+            Long artistId,
+            ArtistServiceClient artistServiceClient) {
         logger.debug("Validating artist access: userId={}, role={}, artistId={}",
                 requestingUserId, userRole, artistId);
 
@@ -59,9 +65,8 @@ public class SecurityConfig {
             throw new UnauthorizedException("Only artists can access analytics data");
         }
 
-        // Artists can only view their own analytics
-        // Assuming artistId matches userId for artists
-        if (!requestingUserId.equals(artistId)) {
+        ArtistDto artist = artistServiceClient.getArtistByUserId(requestingUserId);
+        if (artist == null || artist.getId() == null || !artist.getId().equals(artistId)) {
             throw new UnauthorizedException("You can only view analytics for your own artist profile");
         }
     }

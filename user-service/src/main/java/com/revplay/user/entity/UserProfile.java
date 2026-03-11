@@ -17,11 +17,11 @@ public class UserProfile {
     @Column(nullable = false, unique = true)
     private String username;
 
-    @Column(length = 500)
-    private String bio;
+    @Column(length = 100)
+    private String displayName;
 
     @Column(length = 500)
-    private String profileImageUrl;
+    private String bio;
 
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -60,8 +60,8 @@ public class UserProfile {
         return bio;
     }
 
-    public String getProfileImageUrl() {
-        return profileImageUrl;
+    public String getDisplayName() {
+        return displayName;
     }
 
     public LocalDateTime getCreatedAt() {
@@ -89,8 +89,8 @@ public class UserProfile {
         this.bio = bio;
     }
 
-    public void setProfileImageUrl(String profileImageUrl) {
-        this.profileImageUrl = profileImageUrl;
+    public void setDisplayName(String displayName) {
+        this.displayName = displayName;
     }
 
     public void setCreatedAt(LocalDateTime createdAt) {
@@ -128,13 +128,13 @@ public class UserProfile {
             return this;
         }
 
-        public Builder bio(String bio) {
-            userProfile.bio = bio;
+        public Builder displayName(String displayName) {
+            userProfile.displayName = displayName;
             return this;
         }
 
-        public Builder profileImageUrl(String profileImageUrl) {
-            userProfile.profileImageUrl = profileImageUrl;
+        public Builder bio(String bio) {
+            userProfile.bio = bio;
             return this;
         }
 

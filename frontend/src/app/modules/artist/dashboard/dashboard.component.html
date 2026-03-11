@@ -6,43 +6,28 @@
     <a routerLink="/artist/upload-song">Upload Song</a>
     <a routerLink="/artist/my-songs">My Songs</a>
     <a routerLink="/artist/manage-albums">Manage Albums</a>
-    <a routerLink="/artist/register">Create Profile</a>
+    <span class="dashboard-nav-current">Performance Insights</span>
   </div>
 
   <div class="dashboard-card">
     <h3>Overview</h3>
-    <label for="period">Period</label>
-    <select id="period" [value]="period" (change)="onPeriodChange($any($event.target).value)">
-      <option value="ALL_TIME">ALL_TIME</option>
-      <option value="DAILY">DAILY</option>
-      <option value="WEEKLY">WEEKLY</option>
-      <option value="MONTHLY">MONTHLY</option>
-    </select>
 
     <div class="stats">
       <div class="stat-box">
-        <h3>{{ overview?.totalPlays ?? 0 }}</h3>
+        <h3>{{ uploadedSongs.length }}</h3>
+        <p>Total Songs</p>
+      </div>
+
+      <div class="stat-box">
+        <h3>{{ getTotalPlays() }}</h3>
         <p>Total Plays</p>
       </div>
 
       <div class="stat-box">
-        <h3>{{ overview?.uniqueListeners ?? 0 }}</h3>
-        <p>Unique Listeners</p>
-      </div>
-
-      <div class="stat-box">
-        <h3>{{ overview?.totalListeningTimeMinutes ?? 0 }}</h3>
-        <p>Total Minutes</p>
-      </div>
-
-      <div class="stat-box">
-        <h3>{{ overview?.averagePlayDuration ?? 0 }}</h3>
-        <p>Avg Duration</p>
+        <h3>{{ getTotalFavorites() }}</h3>
+        <p>Total Favorites</p>
       </div>
     </div>
-
-    <p>Top Song: {{ overview?.topSongTitle || '-' }}</p>
-    <p>Analytics Health: {{ health }}</p>
   </div>
 
   <div class="dashboard-card">
@@ -51,16 +36,12 @@
       <tr>
         <th>Song</th>
         <th>Plays</th>
-        <th>Listeners</th>
-        <th>Avg Duration</th>
-        <th>Completion %</th>
+        <th>Favorites</th>
       </tr>
       <tr *ngFor="let song of songs">
         <td>{{ song.title }}</td>
         <td>{{ song.playCount }}</td>
-        <td>{{ song.uniqueListeners }}</td>
-        <td>{{ song.averageListenDuration }}</td>
-        <td>{{ song.completionRate }}</td>
+        <td>{{ getFavoriteCount(song.songId) }}</td>
       </tr>
     </table>
   </div>
@@ -73,20 +54,33 @@
   </div>
 
   <div class="dashboard-card">
-    <h4>Listening Trends (30 days)</h4>
-    <ul class="trend-list">
-      <li *ngFor="let trend of trends">
-        {{ trend.date }}: plays {{ trend.playCount }}, listeners {{ trend.uniqueListeners }}, minutes {{ trend.totalMinutes }}
+    <h4>Top Listeners</h4>
+    <ol class="top-listeners-list" *ngIf="topListeners.length > 0; else noTopListeners">
+      <li *ngFor="let listener of topListeners">
+        {{ listener.username }} ({{ listener.playCount }} listens)
       </li>
-    </ul>
+    </ol>
+    <ng-template #noTopListeners>
+      <p class="trend-empty">No listener data available.</p>
+    </ng-template>
   </div>
 
   <div class="dashboard-card">
-    <h4>Top Listeners</h4>
-    <ol>
-      <li *ngFor="let listener of topListeners">
-        {{ listener.username }} (plays: {{ listener.playCount }}, minutes: {{ listener.totalListeningMinutes }})
-      </li>
-    </ol>
+    <div class="trends-header">
+      <h4>Listening Trends</h4>
+      <div class="trend-controls">
+        <label for="period">View:</label>
+        <select id="period" [value]="period" (change)="onPeriodChange($any($event.target).value)">
+          <option value="MONTHLY">Monthly</option>
+          <option value="WEEKLY">Weekly</option>
+          <option value="DAILY">Daily</option>
+          <option value="ALL_TIME">All Time</option>
+        </select>
+      </div>
+    </div>
+    <div class="trend-chart-shell">
+      <canvas #trendChart></canvas>
+    </div>
+    <p *ngIf="trends.length === 0" class="trend-empty">No listening trend data available.</p>
   </div>
 </div>

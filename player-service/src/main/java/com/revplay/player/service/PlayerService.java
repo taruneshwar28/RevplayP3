@@ -4,7 +4,6 @@ import com.revplay.player.client.ArtistServiceClient;
 import com.revplay.player.dto.PlayResponse;
 import com.revplay.player.dto.SongDto;
 import com.revplay.player.entity.ListeningHistory;
-import com.revplay.player.exception.ResourceNotFoundException;
 import com.revplay.player.repository.ListeningHistoryRepository;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import org.springframework.stereotype.Service;
@@ -34,6 +33,8 @@ public class PlayerService {
         ListeningHistory history = ListeningHistory.builder()
                 .userId(userId)
                 .songId(songId)
+                .songTitleSnapshot(song.getTitle())
+                .artistNameSnapshot(song.getArtistName())
                 .playedAt(LocalDateTime.now())
                 .duration(0)
                 .build();
@@ -60,16 +61,7 @@ public class PlayerService {
                 .build();
     }
 
-    @Transactional
-    public void updatePlayDuration(Long historyId, Integer duration) {
-        ListeningHistory history = listeningHistoryRepository.findById(historyId)
-                .orElseThrow(() -> new ResourceNotFoundException("Listening history not found with id: " + historyId));
-
-        history.setDuration(duration);
-        listeningHistoryRepository.save(history);
-    }
-
     private PlayResponse playFallback(Long userId, Long songId, Exception e) {
-        throw new ResourceNotFoundException("Song not found or artist-service unavailable: " + songId);
+        throw new com.revplay.player.exception.ResourceNotFoundException("Song not found or artist-service unavailable: " + songId);
     }
 }

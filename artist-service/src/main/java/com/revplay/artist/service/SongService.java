@@ -38,7 +38,18 @@ public class SongService {
     @Transactional
     public SongResponse uploadSong(Long userId, SongUploadRequest request) {
         Artist artist = artistRepository.findByUserId(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("Artist profile not found. Please create an artist profile first."));
+                .orElseGet(() -> artistRepository.save(Artist.builder()
+                        .userId(userId)
+                        .stageName("Artist")
+                        .bio("")
+                        .genre("")
+                        .instagramUrl("")
+                        .twitterUrl("")
+                        .youtubeUrl("")
+                        .websiteUrl("")
+                        .profileImageUrl("")
+                        .verified(false)
+                        .build()));
 
         // Validate album ownership if albumId is provided
         if (request.getAlbumId() != null) {
@@ -66,6 +77,14 @@ public class SongService {
     public List<SongResponse> getSongsByArtist(Long userId) {
         Artist artist = artistRepository.findByUserId(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Artist profile not found"));
+
+        return getSongsByArtistId(artist.getId());
+    }
+
+    @Transactional(readOnly = true)
+    public List<SongResponse> getSongsByArtistId(Long artistId) {
+        Artist artist = artistRepository.findById(artistId)
+                .orElseThrow(() -> new ResourceNotFoundException("Artist not found"));
 
         List<Song> songs = songRepository.findByArtistId(artist.getId());
         return songs.stream()
@@ -96,8 +115,8 @@ public class SongService {
             throw new UnauthorizedException("You are not authorized to update this song");
         }
 
-        // Validate album ownership if albumId is being updated
-        if (request.getAlbumId() != null) {
+        // albumId = 0 is treated as removing the song from its album
+        if (request.getAlbumId() != null && request.getAlbumId() != 0L) {
             albumRepository.findByArtistIdAndId(artist.getId(), request.getAlbumId())
                     .orElseThrow(() -> new ResourceNotFoundException("Album not found or does not belong to this artist"));
         }
@@ -108,14 +127,14 @@ public class SongService {
         if (request.getGenre() != null) {
             song.setGenre(request.getGenre());
         }
-        if (request.getCoverImageUrl() != null) {
-            song.setCoverImageUrl(request.getCoverImageUrl());
+        if (request.getDuration() != null) {
+            song.setDuration(request.getDuration());
         }
         if (request.getVisibility() != null) {
             song.setVisibility(request.getVisibility());
         }
         if (request.getAlbumId() != null) {
-            song.setAlbumId(request.getAlbumId());
+            song.setAlbumId(request.getAlbumId() == 0L ? null : request.getAlbumId());
         }
 
         song = songRepository.save(song);

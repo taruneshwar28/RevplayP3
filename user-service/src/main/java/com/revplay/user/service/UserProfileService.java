@@ -50,8 +50,8 @@ public class UserProfileService {
         UserProfile profile = UserProfile.builder()
                 .userId(userId)
                 .username(request.getUsername())
+                .displayName(request.getDisplayName())
                 .bio(request.getBio())
-                .profileImageUrl(request.getProfileImageUrl())
                 .build();
 
         UserProfile savedProfile = userProfileRepository.save(profile);
@@ -66,11 +66,11 @@ public class UserProfileService {
         if (request.getUsername() != null) {
             profile.setUsername(request.getUsername());
         }
+        if (request.getDisplayName() != null) {
+            profile.setDisplayName(request.getDisplayName());
+        }
         if (request.getBio() != null) {
             profile.setBio(request.getBio());
-        }
-        if (request.getProfileImageUrl() != null) {
-            profile.setProfileImageUrl(request.getProfileImageUrl());
         }
 
         UserProfile updatedProfile = userProfileRepository.save(profile);
@@ -85,7 +85,6 @@ public class UserProfileService {
         return UserStatsResponse.builder()
                 .playlistCount(playlistCount)
                 .favoriteCount(favoriteCount)
-                .totalListeningTime(0L) // This would require tracking from streaming service
                 .build();
     }
 
@@ -94,8 +93,8 @@ public class UserProfileService {
                 .id(profile.getId())
                 .userId(profile.getUserId())
                 .username(profile.getUsername())
+                .displayName(profile.getDisplayName())
                 .bio(profile.getBio())
-                .profileImageUrl(profile.getProfileImageUrl())
                 .createdAt(profile.getCreatedAt())
                 .build();
     }

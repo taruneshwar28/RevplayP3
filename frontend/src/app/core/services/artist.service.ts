@@ -6,6 +6,11 @@ import { environment } from 'src/environments/environment';
 export interface ArtistProfileRequest {
   stageName: string;
   bio?: string;
+  genre?: string;
+  instagramUrl?: string;
+  twitterUrl?: string;
+  youtubeUrl?: string;
+  websiteUrl?: string;
   profileImageUrl?: string;
 }
 
@@ -14,6 +19,11 @@ export interface ArtistProfileResponse {
   userId: number;
   stageName: string;
   bio?: string;
+  genre?: string;
+  instagramUrl?: string;
+  twitterUrl?: string;
+  youtubeUrl?: string;
+  websiteUrl?: string;
   profileImageUrl?: string;
   verified: boolean;
   songCount: number;

@@ -24,6 +24,11 @@
   transition: 0.2s ease;
 }
 
+.dashboard-nav-current {
+  color: #f8fafc;
+  font-weight: 700;
+}
+
 .dashboard-nav a:hover {
   color: #f8fafc;
 }
@@ -38,9 +43,9 @@
 }
 
 .stats {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 25px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 200px));
+  gap: 22px 30px;
   margin-top: 15px;
 }
 
@@ -85,11 +90,53 @@ th {
   background: rgba(30, 41, 59, 0.75);
 }
 
-.trend-list {
-  margin: 12px 0 0;
-  padding-left: 18px;
-}
-
 select {
   max-width: 220px;
+}
+
+.trends-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.trend-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.trend-chart-shell {
+  margin-top: 18px;
+  height: 280px;
+  padding: 12px 8px 4px;
+  border-radius: 12px;
+  background: rgba(2, 6, 23, 0.25);
+  border: 1px solid rgba(148, 163, 184, 0.12);
+}
+
+.trend-empty {
+  margin: 14px 0 0;
+  color: #94a3b8;
+}
+
+.top-listeners-list {
+  margin: 14px 0 0;
+  padding-left: 24px;
+}
+
+.top-listeners-list li {
+  margin-bottom: 10px;
+}
+
+@media (max-width: 760px) {
+  .stats {
+    grid-template-columns: 1fr;
+  }
+
+  .trends-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 }

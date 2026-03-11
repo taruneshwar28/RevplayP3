@@ -7,8 +7,8 @@ public class UserProfileResponse {
     private Long id;
     private Long userId;
     private String username;
+    private String displayName;
     private String bio;
-    private String profileImageUrl;
     private LocalDateTime createdAt;
 
     public UserProfileResponse() {
@@ -31,8 +31,8 @@ public class UserProfileResponse {
         return bio;
     }
 
-    public String getProfileImageUrl() {
-        return profileImageUrl;
+    public String getDisplayName() {
+        return displayName;
     }
 
     public LocalDateTime getCreatedAt() {
@@ -56,8 +56,8 @@ public class UserProfileResponse {
         this.bio = bio;
     }
 
-    public void setProfileImageUrl(String profileImageUrl) {
-        this.profileImageUrl = profileImageUrl;
+    public void setDisplayName(String displayName) {
+        this.displayName = displayName;
     }
 
     public void setCreatedAt(LocalDateTime createdAt) {
@@ -91,13 +91,13 @@ public class UserProfileResponse {
             return this;
         }
 
-        public Builder bio(String bio) {
-            response.bio = bio;
+        public Builder displayName(String displayName) {
+            response.displayName = displayName;
             return this;
         }
 
-        public Builder profileImageUrl(String profileImageUrl) {
-            response.profileImageUrl = profileImageUrl;
+        public Builder bio(String bio) {
+            response.bio = bio;
             return this;
         }
 

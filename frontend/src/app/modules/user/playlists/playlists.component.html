@@ -1,7 +1,8 @@
 <section class="ui-page playlists-page">
   <div class="ui-card">
     <h2 class="ui-title">My Playlists</h2>
-    <p class="ui-subtitle">Create playlists and manage songs.</p>
+    <p class="ui-subtitle">Create playlists and manage your songs.</p>
+    <p *ngIf="errorMessage" class="ui-message ui-message-error">{{ errorMessage }}</p>
 
     <div class="ui-form">
       <div class="ui-field">
@@ -12,34 +13,29 @@
         <label>Description</label>
         <input [(ngModel)]="newPlaylist.description" placeholder="Description" />
       </div>
-      <div class="ui-field">
-        <label>Public</label>
-        <input type="checkbox" [(ngModel)]="newPlaylist.isPublic" />
-      </div>
     </div>
 
     <div class="ui-actions">
-      <button (click)="create()" [disabled]="!canCreatePlaylist()">Create Playlist</button>
+      <button (click)="create()" [disabled]="!canCreatePlaylist() || saving">Create Playlist</button>
     </div>
+  </div>
+
+  <div *ngIf="loading" class="ui-card">
+    <p>Loading playlists...</p>
   </div>
 
   <div *ngFor="let playlist of playlists" class="ui-card playlist-card">
     <p class="playlist-title"><strong>{{ playlist.name }}</strong></p>
     <p class="playlist-description">{{ playlist.description || 'No description' }}</p>
-    <p>Visibility: {{ playlist.isPublic ? 'Public' : 'Private' }}</p>
 
-    <div class="ui-form">
+    <div class="ui-form compact-form">
       <div class="ui-field">
         <label>Edit Name</label>
-        <input [(ngModel)]="editDrafts[playlist.id].name" placeholder="Edit name" />
+        <input [(ngModel)]="editDrafts[playlist.id].name" placeholder="Edit Name" />
       </div>
       <div class="ui-field">
         <label>Edit Description</label>
-        <input [(ngModel)]="editDrafts[playlist.id].description" placeholder="Edit description" />
-      </div>
-      <div class="ui-field">
-        <label>Public</label>
-        <input type="checkbox" [(ngModel)]="editDrafts[playlist.id].isPublic" />
+        <input [(ngModel)]="editDrafts[playlist.id].description" placeholder="Edit Description" />
       </div>
     </div>
 
@@ -58,6 +54,7 @@
       <button (click)="addSong(playlist.id)" [disabled]="availableSongs.length === 0">Add Song</button>
     </div>
 
+    <p *ngIf="playlist.songs.length === 0" class="empty-note">No songs in this playlist yet.</p>
     <div *ngFor="let song of playlist.songs" class="song-row">
       <span>{{ song.title }} - {{ song.artistName }}</span>
       <button class="ui-btn-secondary" (click)="removeSong(playlist.id, song.id)">Remove</button>

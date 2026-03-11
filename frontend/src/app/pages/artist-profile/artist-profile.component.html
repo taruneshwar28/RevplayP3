@@ -1,8 +1,11 @@
 <div *ngIf="artist" class="container">
-
-  <h2>{{ artist.name }}</h2>
-  <p><strong>Genre:</strong> {{ artist.genre }}</p>
-  <p><strong>Bio:</strong> {{ artist.bio }}</p>
+  <h2>{{ artist.stageName }}</h2>
+  <p><strong>Genre:</strong> {{ artist.genre || '-' }}</p>
+  <p><strong>Bio:</strong> {{ artist.bio || '-' }}</p>
+  <p><strong>Instagram:</strong> {{ artist.instagramUrl || '-' }}</p>
+  <p><strong>Twitter:</strong> {{ artist.twitterUrl || '-' }}</p>
+  <p><strong>YouTube:</strong> {{ artist.youtubeUrl || '-' }}</p>
+  <p><strong>Website:</strong> {{ artist.websiteUrl || '-' }}</p>
 
   <hr>
 

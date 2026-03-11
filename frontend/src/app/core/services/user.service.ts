@@ -5,23 +5,22 @@ import { environment } from '../../../environments/environment';
 
 export interface UserProfileRequest {
   username: string;
+  displayName?: string;
   bio?: string;
-  profileImageUrl?: string;
 }
 
 export interface UserProfileResponse {
   id: number;
   userId: number;
   username: string;
+  displayName?: string;
   bio?: string;
-  profileImageUrl?: string;
   createdAt: string;
 }
 
 export interface UserStatsResponse {
   playlistCount: number;
   favoriteCount: number;
-  totalListeningTime: number;
 }
 
 @Injectable({

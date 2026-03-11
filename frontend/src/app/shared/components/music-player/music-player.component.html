@@ -5,7 +5,6 @@
       <span class="badge">Live Playback</span>
       <h2>Now Playing</h2>
       <p>{{ currentSong?.title }}</p>
-      <p *ngIf="nowPlaying">Last server now-playing: {{ nowPlaying.title }} ({{ nowPlaying.startedAt | date: 'short' }})</p>
     </div>
     <a routerLink="/history" class="history-link">Recently Played</a>
   </header>
@@ -40,6 +39,6 @@
 
 <ng-template #noSongs>
   <section class="player">
-    <p>{{ loadError || 'No songs available.' }}</p>
+    <p>{{ loadError || 'No songs to play yet.' }}</p>
   </section>
 </ng-template>

@@ -1,15 +1,16 @@
 package com.revplay.user.service;
 
 import com.revplay.user.client.ArtistServiceClient;
+import com.revplay.user.dto.FavoriteCreateRequest;
 import com.revplay.user.dto.FavoriteResponse;
 import com.revplay.user.dto.SongDto;
 import com.revplay.user.entity.Favorite;
-import com.revplay.user.exception.ResourceNotFoundException;
 import com.revplay.user.repository.FavoriteRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -27,22 +28,16 @@ public class FavoriteService {
     }
 
     @Transactional
-    public void addFavorite(Long userId, Long songId) {
-        // Check if already favorited
+    public void addFavorite(Long userId, Long songId, FavoriteCreateRequest request) {
         if (favoriteRepository.existsByUserIdAndSongId(userId, songId)) {
-            throw new IllegalStateException("Song already in favorites");
-        }
-
-        // Verify song exists in artist service
-        try {
-            artistServiceClient.getSongById(songId);
-        } catch (Exception e) {
-            throw new ResourceNotFoundException("Song not found with id: " + songId);
+            return;
         }
 
         Favorite favorite = Favorite.builder()
                 .userId(userId)
                 .songId(songId)
+                .songTitleSnapshot(normalize(request != null ? request.getSongTitle() : null))
+                .artistNameSnapshot(normalize(request != null ? request.getArtistName() : null))
                 .build();
 
         favoriteRepository.save(favorite);
@@ -50,8 +45,10 @@ public class FavoriteService {
 
     @Transactional
     public void removeFavorite(Long userId, Long songId) {
-        Favorite favorite = favoriteRepository.findByUserIdAndSongId(userId, songId)
-                .orElseThrow(() -> new ResourceNotFoundException("Favorite not found for songId: " + songId));
+        Favorite favorite = favoriteRepository.findByUserIdAndSongId(userId, songId).orElse(null);
+        if (favorite == null) {
+            return;
+        }
 
         favoriteRepository.delete(favorite);
     }
@@ -91,19 +88,53 @@ public class FavoriteService {
         return favorites.stream()
                 .map(favorite -> {
                     SongDto song = songMap.get(favorite.getSongId());
+                    if (song == null) {
+                        try {
+                            song = artistServiceClient.getSongById(favorite.getSongId());
+                        } catch (Exception e) {
+                            song = null;
+                        }
+                    }
                     return FavoriteResponse.builder()
                             .id(favorite.getId())
                             .songId(favorite.getSongId())
-                            .songTitle(song != null ? song.getTitle() : "Unknown")
-                            .artistName(song != null ? song.getArtistName() : "Unknown")
+                            .songTitle(song != null && normalize(song.getTitle()) != null
+                                    ? song.getTitle()
+                                    : defaultValue(favorite.getSongTitleSnapshot(), "Unknown"))
+                            .artistName(song != null && normalize(song.getArtistName()) != null
+                                    ? song.getArtistName()
+                                    : defaultValue(favorite.getArtistNameSnapshot(), "Unknown"))
                             .addedAt(favorite.getAddedAt())
                             .build();
                 })
                 .collect(Collectors.toList());
     }
 
-    @Transactional(readOnly = true)
-    public boolean isFavorite(Long userId, Long songId) {
-        return favoriteRepository.existsByUserIdAndSongId(userId, songId);
+    private String normalize(String value) {
+        if (value == null) {
+            return null;
+        }
+        String trimmed = value.trim();
+        return trimmed.isEmpty() ? null : trimmed;
     }
+
+    private String defaultValue(String value, String fallback) {
+        String normalized = normalize(value);
+        return normalized != null ? normalized : fallback;
+    }
+
+    @Transactional(readOnly = true)
+    public Map<Long, Long> getFavoriteCountsBySongIds(List<Long> songIds) {
+        Map<Long, Long> counts = new HashMap<>();
+        if (songIds == null || songIds.isEmpty()) {
+            return counts;
+        }
+
+        for (Object[] row : favoriteRepository.countBySongIds(songIds)) {
+            counts.put((Long) row[0], (Long) row[1]);
+        }
+
+        return counts;
+    }
+
 }

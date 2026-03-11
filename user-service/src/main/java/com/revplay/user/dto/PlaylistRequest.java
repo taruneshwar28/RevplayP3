@@ -1,7 +1,6 @@
 package com.revplay.user.dto;
 
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 public class PlaylistRequest {
@@ -13,7 +12,6 @@ public class PlaylistRequest {
     @Size(max = 1000, message = "Description must not exceed 1000 characters")
     private String description;
 
-    @NotNull(message = "isPublic field is required")
     private Boolean isPublic;
 
     public PlaylistRequest() {

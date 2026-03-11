@@ -37,7 +37,6 @@ public class TrendingResponse {
         }
     }
 
-    // Getters and Setters
     public List<SongCatalogResponse> getSongs() {
         return songs;
     }

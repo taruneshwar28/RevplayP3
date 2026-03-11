@@ -1,7 +1,12 @@
 package com.revplay.analytics.controller;
 
 import com.revplay.analytics.config.SecurityConfig;
-import com.revplay.analytics.dto.*;
+import com.revplay.analytics.client.ArtistServiceClient;
+import com.revplay.analytics.dto.AnalyticsOverviewResponse;
+import com.revplay.analytics.dto.ListeningTrendResponse;
+import com.revplay.analytics.dto.SongPerformanceResponse;
+import com.revplay.analytics.dto.TopListenerResponse;
+import com.revplay.analytics.dto.TopSongsResponse;
 import com.revplay.analytics.service.AnalyticsService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
@@ -20,9 +25,11 @@ public class AnalyticsController {
     private static final Logger logger = LoggerFactory.getLogger(AnalyticsController.class);
 
     private final AnalyticsService analyticsService;
+    private final ArtistServiceClient artistServiceClient;
 
-    public AnalyticsController(AnalyticsService analyticsService) {
+    public AnalyticsController(AnalyticsService analyticsService, ArtistServiceClient artistServiceClient) {
         this.analyticsService = analyticsService;
+        this.artistServiceClient = artistServiceClient;
     }
 
     @GetMapping("/artist/{artistId}/overview")
@@ -36,7 +43,7 @@ public class AnalyticsController {
         Long userId = (Long) request.getAttribute("userId");
         String userRole = (String) request.getAttribute("userRole");
 
-        SecurityConfig.validateArtistAccess(userId, userRole, artistId);
+        SecurityConfig.validateArtistAccess(userId, userRole, artistId, artistServiceClient);
 
         AnalyticsOverviewResponse overview = analyticsService.getArtistOverview(artistId, period);
         return ResponseEntity.ok(overview);
@@ -52,7 +59,7 @@ public class AnalyticsController {
         Long userId = (Long) request.getAttribute("userId");
         String userRole = (String) request.getAttribute("userRole");
 
-        SecurityConfig.validateArtistAccess(userId, userRole, artistId);
+        SecurityConfig.validateArtistAccess(userId, userRole, artistId, artistServiceClient);
 
         List<SongPerformanceResponse> performance = analyticsService.getSongPerformance(artistId);
         return ResponseEntity.ok(performance);
@@ -70,7 +77,7 @@ public class AnalyticsController {
         Long userId = (Long) request.getAttribute("userId");
         String userRole = (String) request.getAttribute("userRole");
 
-        SecurityConfig.validateArtistAccess(userId, userRole, artistId);
+        SecurityConfig.validateArtistAccess(userId, userRole, artistId, artistServiceClient);
 
         if (limit <= 0 || limit > 100) {
             throw new IllegalArgumentException("Limit must be between 1 and 100");
@@ -93,7 +100,7 @@ public class AnalyticsController {
         Long userId = (Long) request.getAttribute("userId");
         String userRole = (String) request.getAttribute("userRole");
 
-        SecurityConfig.validateArtistAccess(userId, userRole, artistId);
+        SecurityConfig.validateArtistAccess(userId, userRole, artistId, artistServiceClient);
 
         // Default to last 30 days if not specified
         if (startDate == null) {
@@ -126,7 +133,7 @@ public class AnalyticsController {
         Long userId = (Long) request.getAttribute("userId");
         String userRole = (String) request.getAttribute("userRole");
 
-        SecurityConfig.validateArtistAccess(userId, userRole, artistId);
+        SecurityConfig.validateArtistAccess(userId, userRole, artistId, artistServiceClient);
 
         if (limit <= 0 || limit > 100) {
             throw new IllegalArgumentException("Limit must be between 1 and 100");
@@ -140,4 +147,5 @@ public class AnalyticsController {
     public ResponseEntity<String> health() {
         return ResponseEntity.ok("Analytics Service is running");
     }
+
 }
