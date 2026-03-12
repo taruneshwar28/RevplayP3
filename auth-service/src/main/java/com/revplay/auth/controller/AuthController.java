@@ -9,6 +9,8 @@ import com.revplay.auth.service.AuthService;
 import com.revplay.auth.service.JwtService;
 import com.revplay.auth.service.RefreshTokenService;
 import jakarta.validation.Valid;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -20,6 +22,7 @@ import java.util.Map;
 @RequestMapping("/api/auth")
 // @CrossOrigin(origins = "http://localhost:4200")
 public class AuthController {
+    private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
 
     private final AuthService authService;
     private final RefreshTokenService refreshTokenService;
@@ -38,18 +41,21 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequest request) {
+        logger.info("Registration request received for email={}", request.getEmail());
         AuthResponse response = authService.register(request);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
+        logger.info("Login request received for email={}", request.getEmail());
         AuthResponse response = authService.login(request);
         return ResponseEntity.ok(response);
     }
 
     @PostMapping("/refresh")
     public ResponseEntity<TokenRefreshResponse> refreshToken(@Valid @RequestBody TokenRefreshRequest request) {
+        logger.info("Refresh token request received");
         String requestRefreshToken = request.getRefreshToken();
 
         RefreshToken refreshToken = refreshTokenService.findByToken(requestRefreshToken)
@@ -73,6 +79,7 @@ public class AuthController {
 
     @PostMapping("/logout")
     public ResponseEntity<Map<String, String>> logout(@Valid @RequestBody TokenRefreshRequest request) {
+        logger.info("Logout request received");
         String requestRefreshToken = request.getRefreshToken();
 
         RefreshToken refreshToken = refreshTokenService.findByToken(requestRefreshToken)
@@ -88,6 +95,7 @@ public class AuthController {
 
     @GetMapping("/validate")
     public ResponseEntity<Map<String, Object>> validateToken(@RequestParam String token) {
+        logger.info("Token validation request received");
         boolean isValid = authService.validateToken(token);
 
         Map<String, Object> response = new HashMap<>();

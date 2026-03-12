@@ -7,3 +7,10 @@
   margin-top: 14px;
   color: #cbd5e1;
 }
+
+.ui-error {
+  color: #e11d48;
+  font-size: 0.85rem;
+  margin-top: 4px;
+  display: block;
+}

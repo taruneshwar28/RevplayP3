@@ -3,6 +3,8 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService, RegisterRequest, UserRole } from '../../../core/services/auth.service';
 
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
 @Component({
   selector: 'app-register',
   templateUrl: './register.component.html',
@@ -22,7 +24,7 @@ export class RegisterComponent {
     this.registerForm = this.fb.group({
       firstName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(30)]],
       lastName: ['', [Validators.required, Validators.minLength(1), Validators.maxLength(30)]],
-      email: ['', [Validators.required, Validators.email]],
+      email: ['', [Validators.required, Validators.pattern(EMAIL_PATTERN)]],
       password: ['', [Validators.required, Validators.minLength(6), Validators.maxLength(64)]],
       role: ['USER', Validators.required],
     });
@@ -57,13 +59,22 @@ export class RegisterComponent {
 
     this.authService.register(payload).subscribe({
       next: () => {
-        this.successMessage = 'Registration successful. Please login to continue.';
+        this.successMessage = 'Registration successful. Redirecting to login...';
+        this.errorMessage = '';
         this.loading = false;
-        this.router.navigate(['/home/login']);
+
+        setTimeout(() => {
+          this.router.navigate(['/home/login']);
+        }, 2000);
       },
       error: (error) => {
-        const backendMessage = error?.error?.message || error?.error?.error || error?.message || '';
-        this.errorMessage = backendMessage || 'Registration failed. Please try again.';
+        const validationErrors = error?.error?.validationErrors;
+        if (validationErrors && typeof validationErrors === 'object') {
+          this.errorMessage = Object.values(validationErrors).join(' ');
+        } else {
+          const backendMessage = error?.error?.message || error?.error?.error || error?.message || '';
+          this.errorMessage = backendMessage || 'Registration failed. Please try again.';
+        }
         this.loading = false;
       },
     });
