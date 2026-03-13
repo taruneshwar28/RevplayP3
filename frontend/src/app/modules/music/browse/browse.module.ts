@@ -5,9 +5,10 @@ import { FormsModule } from '@angular/forms';
 import { BrowseRoutingModule } from './browse-routing.module';
 import { BrowseComponent } from './browse.component';
 import { SongDetailComponent } from './song-detail.component';
+import { SearchBarComponent } from './search-bar/search-bar.component';
 
 @NgModule({
-  declarations: [BrowseComponent, SongDetailComponent],
+  declarations: [BrowseComponent, SongDetailComponent, SearchBarComponent],
   imports: [CommonModule, FormsModule, BrowseRoutingModule],
 })
 export class BrowseModule {}

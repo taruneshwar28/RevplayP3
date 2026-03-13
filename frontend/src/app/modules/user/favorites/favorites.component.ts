@@ -18,9 +18,12 @@ export class FavoritesComponent implements OnInit {
   }
 
   loadFavorites(): void {
-    this.loading = true;
     this.errorMessage = '';
-    this.favoriteService.get().subscribe({
+    const cachedFavorites = this.favoriteService.getCachedFavorites();
+    this.favorites = cachedFavorites;
+    this.loading = cachedFavorites.length === 0;
+
+    this.favoriteService.refresh().subscribe({
       next: (rows) => {
         this.favorites = rows;
         this.loading = false;

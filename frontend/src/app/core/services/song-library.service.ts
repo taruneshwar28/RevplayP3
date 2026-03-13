@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, shareReplay } from 'rxjs';
 import { environment } from 'src/environments/environment';
 
 export interface PageResponse<T> {
@@ -52,16 +52,26 @@ export interface TrendingResponse {
 @Injectable({ providedIn: 'root' })
 export class SongLibraryService {
   private readonly baseUrl = `${environment.apiUrl}/catalog`;
+  private readonly publicSongsCache = new Map<string, Observable<PageResponse<SongCatalogResponse>>>();
 
   constructor(private readonly http: HttpClient) {}
 
   getPublicSongs(page = 0, size = 20): Observable<PageResponse<SongCatalogResponse>> {
-    return this.http.get<PageResponse<SongCatalogResponse>>(`${this.baseUrl}/songs`, {
+    const cacheKey = `${page}:${size}`;
+    const cached = this.publicSongsCache.get(cacheKey);
+    if (cached) {
+      return cached;
+    }
+
+    const request$ = this.http.get<PageResponse<SongCatalogResponse>>(`${this.baseUrl}/songs`, {
       params: {
         page,
         size,
       },
-    });
+    }).pipe(shareReplay(1));
+
+    this.publicSongsCache.set(cacheKey, request$);
+    return request$;
   }
 
   getSongById(songId: number): Observable<SongCatalogResponse> {

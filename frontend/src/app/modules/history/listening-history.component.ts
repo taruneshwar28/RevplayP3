@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import {
   ListeningHistoryItem,
   ListeningHistoryService,
-} from '../../core/service/listening-history.service';
+} from '../../core/services/listening-history.service';
 
 @Component({
   selector: 'app-listening-history',

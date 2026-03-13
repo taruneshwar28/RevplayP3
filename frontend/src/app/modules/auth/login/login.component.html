@@ -1,7 +1,7 @@
 <section class="ui-page">
   <div class="ui-card ui-auth-card">
     <h2 class="ui-title">Login</h2>
-    <p class="ui-subtitle">Welcome back to RevPlay.</p>
+    <!-- <p class="ui-subtitle">Welcome back to RevPlay.</p> -->
 
     <form class="ui-form" [formGroup]="loginForm" (ngSubmit)="onSubmit()">
       <div class="ui-field">
@@ -11,7 +11,8 @@
           class="ui-error"
           *ngIf="loginForm.get('email')?.invalid && loginForm.get('email')?.touched"
         >
-          Valid email is required
+          <span *ngIf="loginForm.get('email')?.errors?.['required']">Email is required.</span>
+          <span *ngIf="loginForm.get('email')?.errors?.['pattern']">Please enter a valid email address.</span>
         </small>
       </div>
 

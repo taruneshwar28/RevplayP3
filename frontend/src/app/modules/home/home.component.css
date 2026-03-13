@@ -1,0 +1,23 @@
+.home-welcome {
+  text-align: center;
+  margin: 2rem auto;
+  padding: 1.5rem;
+  max-width: 780px;
+  border: 1px solid rgba(96, 165, 250, 0.26);
+  border-radius: 14px;
+  background:
+    linear-gradient(145deg, rgba(15, 23, 42, 0.96), rgba(30, 41, 59, 0.9)),
+    radial-gradient(circle at top, rgba(37, 99, 235, 0.2), transparent 55%);
+  box-shadow: 0 16px 36px rgba(2, 6, 23, 0.3);
+}
+
+.home-welcome h1 {
+  margin: 0 0 0.5rem;
+  font-size: 2.1rem;
+  color: #f8fafc;
+}
+
+.home-welcome p {
+  margin: 0;
+  color: #cbd5e1;
+}

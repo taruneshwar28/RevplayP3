@@ -3,25 +3,44 @@
     <h2 class="ui-title">Register</h2>
     <p class="ui-subtitle">Create your RevPlay account.</p>
 
-    <form class="ui-form" [formGroup]="registerForm" (ngSubmit)="onSubmit()">
+    <form class="ui-form" [formGroup]="registerForm" (ngSubmit)="onSubmit()" novalidate>
       <div class="ui-field">
         <label for="firstName">First Name</label>
         <input id="firstName" type="text" formControlName="firstName" />
+        <small class="ui-error" *ngIf="registerForm.get('firstName')?.invalid && (registerForm.get('firstName')?.touched || registerForm.get('firstName')?.dirty)">
+          <span *ngIf="registerForm.get('firstName')?.errors?.['required']">First name is required.</span>
+          <span *ngIf="registerForm.get('firstName')?.errors?.['minlength']">First name must be at least 2 characters.</span>
+          <span *ngIf="registerForm.get('firstName')?.errors?.['maxlength']">First name cannot be longer than 30 characters.</span>
+        </small>
       </div>
 
       <div class="ui-field">
         <label for="lastName">Last Name</label>
         <input id="lastName" type="text" formControlName="lastName" />
+        <small class="ui-error" *ngIf="registerForm.get('lastName')?.invalid && (registerForm.get('lastName')?.touched || registerForm.get('lastName')?.dirty)">
+          <span *ngIf="registerForm.get('lastName')?.errors?.['required']">Last name is required.</span>
+          <span *ngIf="registerForm.get('lastName')?.errors?.['minlength']">Last name must be at least 1 character.</span>
+          <span *ngIf="registerForm.get('lastName')?.errors?.['maxlength']">Last name cannot be longer than 30 characters.</span>
+        </small>
       </div>
 
       <div class="ui-field">
         <label for="email">Email</label>
         <input id="email" type="email" formControlName="email" />
+        <small class="ui-error" *ngIf="registerForm.get('email')?.invalid && (registerForm.get('email')?.touched || registerForm.get('email')?.dirty)">
+          <span *ngIf="registerForm.get('email')?.errors?.['required']">Email is required.</span>
+          <span *ngIf="registerForm.get('email')?.errors?.['pattern']">Please enter a valid email address.</span>
+        </small>
       </div>
 
       <div class="ui-field">
         <label for="password">Password</label>
         <input id="password" type="password" formControlName="password" />
+        <small class="ui-error" *ngIf="registerForm.get('password')?.invalid && (registerForm.get('password')?.touched || registerForm.get('password')?.dirty)">
+          <span *ngIf="registerForm.get('password')?.errors?.['required']">Password is required.</span>
+          <span *ngIf="registerForm.get('password')?.errors?.['minlength']">Password must be at least 6 characters.</span>
+          <span *ngIf="registerForm.get('password')?.errors?.['maxlength']">Password cannot exceed 64 characters.</span>
+        </small>
       </div>
 
       <div class="ui-field">
@@ -33,7 +52,7 @@
       </div>
 
       <div class="ui-actions">
-        <button type="submit" [disabled]="loading">
+        <button type="submit" [disabled]="loading || registerForm.invalid">
           {{ loading ? 'Registering...' : 'Register' }}
         </button>
       </div>

@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
+import { catchError, of } from 'rxjs';
 import { FavoriteResponse, FavoriteService } from 'src/app/core/services/favorite.service';
 import {
   SongCatalogResponse,
@@ -52,19 +53,50 @@ export class BrowseComponent implements OnInit {
   loadSongs(): void {
     this.loading = true;
     this.errorMessage = '';
+    const hasClientFilters =
+      !!this.artistFilter ||
+      !!this.albumFilter ||
+      !!this.genreFilter ||
+      !!this.dateFilter ||
+      this.sortOption !== 'none';
+
     if (this.searchQuery) {
-      this.songLibraryService.searchSongs(this.searchQuery, 0, 500).subscribe({
-        next: (res) => {
-          this.updateSongs(res.songs);
+      const searchRequest$ = hasClientFilters
+        ? this.songLibraryService.searchSongs(this.searchQuery, 0, 500)
+        : this.songLibraryService.searchSongs(this.searchQuery, this.currentPage, this.pageSize);
+
+      searchRequest$.subscribe({
+        next: (search) => {
+          if (hasClientFilters) {
+            this.updateSongs(search.songs, true);
+            this.loadFavoritesInBackground();
+            return;
+          }
+
+          this.totalPages = Math.max(1, Math.ceil((search.totalResults ?? search.songs.length) / this.pageSize));
+          this.updateSongs(search.songs, false);
+          this.loadFavoritesInBackground();
         },
         error: () => this.handleLoadError(),
       });
       return;
     }
 
-    this.songLibraryService.getPublicSongs(0, 500).subscribe({
-      next: (res) => {
-        this.updateSongs(res.content);
+    const songsRequest$ = hasClientFilters
+      ? this.songLibraryService.getPublicSongs(0, 500)
+      : this.songLibraryService.getPublicSongs(this.currentPage, this.pageSize);
+
+    songsRequest$.subscribe({
+      next: (songs) => {
+        if (hasClientFilters) {
+          this.updateSongs(songs.content, true);
+          this.loadFavoritesInBackground();
+          return;
+        }
+
+        this.totalPages = songs.totalPages ?? 1;
+        this.updateSongs(songs.content, false);
+        this.loadFavoritesInBackground();
       },
       error: () => this.handleLoadError(),
     });
@@ -77,10 +109,7 @@ export class BrowseComponent implements OnInit {
 
     this.favoriteBusySongIds.add(songId);
     const currentSong = this.songs.find((song) => song.id === songId);
-    const update = this.songs.map((song) =>
-      song.id === songId ? { ...song, isFavorite: !isFavorite } : song
-    );
-    this.songs = update;
+    this.updateFavoriteState(songId, !isFavorite);
 
     const request$ = isFavorite
       ? this.favoriteService.remove(songId)
@@ -91,9 +120,7 @@ export class BrowseComponent implements OnInit {
         this.favoriteBusySongIds.delete(songId);
       },
       error: () => {
-        this.songs = this.songs.map((song) =>
-          song.id === songId ? { ...song, isFavorite } : song
-        );
+        this.updateFavoriteState(songId, isFavorite);
         this.favoriteBusySongIds.delete(songId);
       },
     });
@@ -131,22 +158,37 @@ export class BrowseComponent implements OnInit {
     return this.filteredSongs.length > 0;
   }
 
-  private loadFavorites(): void {
-    this.favoriteService.get().subscribe({
-      next: (favorites) => {
-        this.applyFavoriteState(favorites);
-        this.loading = false;
-      },
-      error: () => {
-        this.applyFavoriteState([]);
-        this.loading = false;
-      },
+  private updateSongs(rawSongs: SongCatalogResponse[], applyClientFiltering: boolean): void {
+    const favoriteIds = this.favoriteService.getCachedFavoriteSongIds();
+    this.songs = rawSongs.map((song) => ({
+      ...song,
+      isFavorite: favoriteIds.has(song.id),
+    }));
+
+    if (applyClientFiltering) {
+      this.applyFiltersAndPagination();
+    } else {
+      this.filteredSongs = [...this.songs];
+    }
+
+    this.loading = false;
+  }
+
+  private loadFavoritesInBackground(): void {
+    this.favoriteService.get().pipe(catchError(() => of([]))).subscribe((favorites) => {
+      const ids = new Set((favorites as FavoriteResponse[]).map((row) => row.songId));
+      this.songs = this.songs.map((song) => ({ ...song, isFavorite: ids.has(song.id) }));
+      this.filteredSongs = this.filteredSongs.map((song) => ({ ...song, isFavorite: ids.has(song.id) }));
     });
   }
 
-  private updateSongs(rawSongs: SongCatalogResponse[]): void {
-    this.songs = rawSongs.map((song) => ({ ...song, isFavorite: false }));
-    this.loadFavorites();
+  private updateFavoriteState(songId: number, isFavorite: boolean): void {
+    this.songs = this.songs.map((song) =>
+      song.id === songId ? { ...song, isFavorite } : song
+    );
+    this.filteredSongs = this.filteredSongs.map((song) =>
+      song.id === songId ? { ...song, isFavorite } : song
+    );
   }
 
   private handleLoadError(): void {
@@ -167,16 +209,6 @@ export class BrowseComponent implements OnInit {
         page,
       },
     });
-  }
-
-  private applyFavoriteState(favorites: FavoriteResponse[]): void {
-    const ids = new Set(favorites.map((row) => row.songId));
-    this.songs = this.songs.map((song) => ({
-      ...song,
-      isFavorite: ids.has(song.id),
-    }));
-    this.applyFiltersAndPagination();
-    this.loading = false;
   }
 
   private applyFiltersAndPagination(): void {

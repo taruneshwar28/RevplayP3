@@ -16,7 +16,7 @@
     <artifactId>auth-service</artifactId>
     <version>1.0.0</version>
     <name>auth-service</name>
-    <description>Authentication Service for RevPlay - Owned by Satya</description>
+    <description>Authentication Service for RevPlay</description>
 
     <properties>
         <java.version>17</java.version>
