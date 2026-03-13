@@ -7,6 +7,8 @@ import com.revplay.music.dto.SearchResponse;
 import com.revplay.music.dto.SongCatalogResponse;
 import com.revplay.music.exception.ServiceUnavailableException;
 import feign.FeignException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -14,6 +16,8 @@ import java.util.stream.Collectors;
 
 @Service
 public class SearchService {
+
+    private static final Logger log = LoggerFactory.getLogger(SearchService.class);
 
     private final ArtistServiceClient artistServiceClient;
 
@@ -23,7 +27,7 @@ public class SearchService {
 
     public SearchResponse searchSongs(String query, int page, int size) {
         try {
-            // Fetch all public songs and perform search
+            log.debug("Searching songs: query={}, page={}, size={}", query, page, size);
             PageResponse<SongCatalogResponse> allSongs = artistServiceClient.getPublicSongs(0, 1000);
 
             String lowerQuery = query.toLowerCase();
@@ -46,12 +50,15 @@ public class SearchService {
                     .pageSize(size)
                     .build();
         } catch (FeignException e) {
+            log.error("Failed to search songs via artist-service: query={}, page={}, size={}, status={}",
+                    query, page, size, e.status(), e);
             throw new ServiceUnavailableException("Artist service is currently unavailable", e);
         }
     }
 
     public SearchResponse searchByGenre(String genre, int page, int size) {
         try {
+            log.debug("Searching songs by genre: genre={}, page={}, size={}", genre, page, size);
             PageResponse<SongCatalogResponse> allSongs = artistServiceClient.getPublicSongs(0, 1000);
 
             List<SongCatalogResponse> matchingSongs = allSongs.getContent().stream()
@@ -73,12 +80,16 @@ public class SearchService {
                     .pageSize(size)
                     .build();
         } catch (FeignException e) {
+            log.error("Failed to search songs by genre via artist-service: genre={}, page={}, size={}, status={}",
+                    genre, page, size, e.status(), e);
             throw new ServiceUnavailableException("Artist service is currently unavailable", e);
         }
     }
 
     public SearchResponse advancedSearch(SearchRequest searchRequest, int page, int size) {
         try {
+            log.debug("Performing advanced search: query={}, genre={}, artistName={}, page={}, size={}",
+                    searchRequest.getQuery(), searchRequest.getGenre(), searchRequest.getArtistName(), page, size);
             PageResponse<SongCatalogResponse> allSongs = artistServiceClient.getPublicSongs(0, 1000);
 
             String lowerQuery = searchRequest.getQuery().toLowerCase();
@@ -116,6 +127,8 @@ public class SearchService {
                     .pageSize(size)
                     .build();
         } catch (FeignException e) {
+            log.error("Failed to perform advanced search via artist-service: query={}, genre={}, artistName={}, page={}, size={}, status={}",
+                    searchRequest.getQuery(), searchRequest.getGenre(), searchRequest.getArtistName(), page, size, e.status(), e);
             throw new ServiceUnavailableException("Artist service is currently unavailable", e);
         }
     }
